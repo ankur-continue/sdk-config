@@ -1,0 +1,1739 @@
+11c11
+< CONFIG_BOOT_SIGNATURE_KEY_FILE="root-ec-p256.pem"
+---
+> CONFIG_BOOT_SIGNATURE_KEY_FILE="keys/signing_key.pem"
+24a25,28
+> CONFIG_BOOT_SOMETHING_USES_SHA256=y
+> CONFIG_BOOT_IMG_HASH_ALG_SHA256_ALLOW=y
+> # CONFIG_BOOT_IMG_HASH_DIRECTLY_ON_STORAGE is not set
+> CONFIG_BOOT_IMG_HASH_ALG_SHA256=y
+30a35,36
+> # CONFIG_BOOT_BYPASS_KEY_MATCH is not set
+> # CONFIG_BOOT_KEYS_REVOCATION is not set
+32c38,40
+< CONFIG_MBEDTLS_CFG_FILE="mcuboot-mbedtls-cfg.h"
+---
+> # CONFIG_MCUBOOT_CLEANUP_RAM is not set
+> # CONFIG_MBEDTLS is not set
+> # CONFIG_NRF_SECURITY is not set
+35c43
+< CONFIG_BOOT_PREFER_SWAP_MOVE=y
+---
+> CONFIG_BOOT_PREFER_SWAP_OFFSET=y
+37a46
+> # CONFIG_BOOT_SWAP_USING_OFFSET is not set
+42a52
+> # CONFIG_SINGLE_APPLICATION_SLOT_RAM_LOAD is not set
+44a55
+> # CONFIG_BOOT_MAX_IMG_SECTORS_AUTO is not set
+52,54d62
+< CONFIG_BOOT_USB_DFU_NO=y
+< # CONFIG_BOOT_USB_DFU_WAIT is not set
+< # CONFIG_BOOT_USB_DFU_GPIO is not set
+64c72,80
+< # CONFIG_MCUBOOT_INDICATION_LED is not set
+---
+> 
+> #
+> # USB DFU
+> #
+> CONFIG_BOOT_USB_DFU_NO=y
+> # CONFIG_BOOT_USB_DFU_WAIT is not set
+> # CONFIG_BOOT_USB_DFU_GPIO is not set
+> # end of USB DFU
+> 
+67a84,85
+> # CONFIG_MCUBOOT_UUID_VID is not set
+> # CONFIG_MCUBOOT_UUID_CID is not set
+68a87,89
+> CONFIG_BOOT_WATCHDOG_FEED_NRFX_WDT=y
+> # CONFIG_BOOT_GO_HOOKS is not set
+> # CONFIG_BOOT_FLASH_AREA_HOOKS is not set
+70c91,94
+< # end of MCUBoot settings
+---
+> # CONFIG_FIND_NEXT_SLOT_HOOKS is not set
+> CONFIG_MCUBOOT_USE_TLV_ALLOW_LIST=y
+> CONFIG_MCUBOOT_STORAGE_WITH_ERASE=y
+> # CONFIG_MCUBOOT_STORAGE_MINIMAL_SCRAMBLE is not set
+71a96,103
+> #
+> # Defaults
+> #
+> # CONFIG_BOOT_FIH_PROFILE_DEFAULT_LOW is not set
+> # CONFIG_BOOT_FIH_PROFILE_DEFAULT_MEDIUM is not set
+> # CONFIG_BOOT_FIH_PROFILE_DEFAULT_HIGH is not set
+> # end of Defaults
+> 
+72a105
+> # end of MCUBoot settings
+78a112,114
+> CONFIG_MCUBOOT_BOOTUTIL_LIB_OWN_LOG=y
+> # CONFIG_MCUBOOT_CHECK_HEADER_LOAD_ADDRESS is not set
+> CONFIG_NCS_MCUBOOT_IMG_VALIDATE_ATTEMPT_COUNT=1
+80a117,123
+> # CONFIG_REGULATOR is not set
+> CONFIG_SYSTEM_WORKQUEUE_STACK_SIZE=1024
+> CONFIG_MAIN_STACK_SIZE=10240
+> CONFIG_FPU=y
+> # CONFIG_LIBLC3 is not set
+> # CONFIG_SERIAL is not set
+> # CONFIG_SPI is not set
+81a125
+> # CONFIG_MEMC is not set
+83d126
+< # CONFIG_SPI is not set
+89c132,135
+< CONFIG_PLATFORM_SPECIFIC_INIT=y
+---
+> CONFIG_SOC_RESET_HOOK=y
+> CONFIG_CLOCK_CONTROL=y
+> CONFIG_IDLE_STACK_SIZE=320
+> CONFIG_ISR_STACK_SIZE=2048
+92c138
+< CONFIG_PINCTRL=y
+---
+> CONFIG_KERNEL_ENTRY="__start"
+95,96d140
+< CONFIG_MAIN_STACK_SIZE=10240
+< CONFIG_IDLE_STACK_SIZE=320
+97a142
+> # CONFIG_COUNTER is not set
+100d144
+< # CONFIG_COUNTER is not set
+105a150,157
+> # CONFIG_MULTI_LEVEL_INTERRUPTS is not set
+> # CONFIG_ZERO_LATENCY_IRQS is not set
+> CONFIG_NUM_PREEMPT_PRIORITIES=0
+> CONFIG_NUM_METAIRQ_PRIORITIES=0
+> CONFIG_GEN_IRQ_VECTOR_TABLE=y
+> # CONFIG_DYNAMIC_INTERRUPTS is not set
+> CONFIG_GEN_ISR_TABLES=y
+> # CONFIG_INIT_STACKS is not set
+107c159,165
+< CONFIG_FPU=y
+---
+> CONFIG_SYS_CLOCK_EXISTS=y
+> CONFIG_INIT_ARCH_HW_AT_BOOT=y
+> # CONFIG_BUILD_OUTPUT_S19 is not set
+> CONFIG_BUILD_OUTPUT_HEX=y
+> CONFIG_FLASH_FILL_BUFFER_SIZE=32
+> CONFIG_ARCH_HAS_CUSTOM_BUSY_WAIT=y
+> CONFIG_FLASH=y
+109c167,168
+< # CONFIG_CODE_DATA_RELOCATION_SRAM is not set
+---
+> # CONFIG_POWER_DOMAIN is not set
+> # CONFIG_MFD is not set
+111d169
+< # CONFIG_SERIAL is not set
+113,118c171
+< # CONFIG_TINYCRYPT is not set
+< # CONFIG_MBEDTLS is not set
+< # CONFIG_MEMC is not set
+< CONFIG_KERNEL_ENTRY="__start"
+< # CONFIG_MULTI_LEVEL_INTERRUPTS is not set
+< # CONFIG_DYNAMIC_INTERRUPTS is not set
+---
+> # CONFIG_CODE_DATA_RELOCATION_SRAM is not set
+120a174
+> CONFIG_CMSIS_CORE_HAS_SYSTEM_CORE_CLOCK=y
+122c176
+< CONFIG_SYSTEM_WORKQUEUE_STACK_SIZE=1024
+---
+> # CONFIG_ROMSTART_RELOCATION_ROM is not set
+124,125d177
+< CONFIG_GEN_IRQ_VECTOR_TABLE=y
+< CONFIG_SOC="nrf52840"
+128d179
+< CONFIG_NRF_RTC_TIMER=y
+130,132c181,182
+< CONFIG_BUILD_OUTPUT_HEX=y
+< CONFIG_CLOCK_CONTROL=y
+< CONFIG_ARCH_HAS_CUSTOM_BUSY_WAIT=y
+---
+> # CONFIG_ASSERT is not set
+> # CONFIG_DEVICE_DEPS is not set
+134a185,189
+> # CONFIG_CONSOLE is not set
+> # CONFIG_WINSTREAM is not set
+> CONFIG_COMMON_LIBC_MALLOC_ARENA_SIZE=0
+> CONFIG_GEN_SW_ISR_TABLE=y
+> # CONFIG_REBOOT is not set
+136d190
+< CONFIG_GEN_ISR_TABLES=y
+138d191
+< CONFIG_GEN_SW_ISR_TABLE=y
+140,143d192
+< # CONFIG_REBOOT is not set
+< # CONFIG_POWER_DOMAIN is not set
+< # CONFIG_CONSOLE is not set
+< CONFIG_SOC_SERIES="nrf52"
+145,146c194
+< CONFIG_ISR_STACK_SIZE=2048
+< CONFIG_MINIMAL_LIBC_OPTIMIZE_STRING_FOR_SIZE=y
+---
+> CONFIG_ISR_TABLES_LOCAL_DECLARATION_SUPPORTED=y
+147a196,197
+> CONFIG_KERNEL_MEM_POOL=y
+> # CONFIG_OUTPUT_DISASSEMBLY is not set
+150d199
+< CONFIG_PRIVILEGED_STACK_SIZE=1024
+161a211
+> CONFIG_DT_HAS_NORDIC_BT_HCI_SDC_ENABLED=y
+182d231
+< CONFIG_DT_HAS_NORDIC_NRF_TWI_ENABLED=y
+186a236,238
+> CONFIG_DT_HAS_NORDIC_NRF52_HFXO_ENABLED=y
+> CONFIG_DT_HAS_NORDIC_NRF52X_REGULATOR_HV_ENABLED=y
+> CONFIG_DT_HAS_NORDIC_NRF5X_REGULATOR_ENABLED=y
+189d240
+< CONFIG_DT_HAS_ZEPHYR_BT_HCI_ENTROPY_ENABLED=y
+194a246
+> # CONFIG_BUILD_ONLY_NO_BLOBS is not set
+201c253
+< # nrf (/opt/nordic/ncs/v2.7.0/nrf)
+---
+> # nrf (/opt/nordic/ncs/v3.2.2/nrf)
+203,205c255
+< # CONFIG_MBOX is not set
+< CONFIG_NUM_METAIRQ_PRIORITIES=0
+< # CONFIG_INIT_STACKS is not set
+---
+> # CONFIG_NRF_802154_RADIO_DRIVER is not set
+206a257,258
+> # CONFIG_ZMS is not set
+> # CONFIG_NVS is not set
+212d263
+< CONFIG_INIT_ARCH_HW_AT_BOOT=y
+215c266
+< # CONFIG_GETOPT is not set
+---
+> CONFIG_NRF_SECURITY_ENABLER=y
+221c272
+< CONFIG_NCS_MCUBOOT_IN_BUILD=y
+---
+> # CONFIG_NCS_MCUBOOT_IN_BUILD is not set
+233d283
+< # CONFIG_BUILD_S1_VARIANT is not set
+249a300,301
+> CONFIG_SB_VALIDATION_STRUCT_HAS_HASH=y
+> CONFIG_SB_VALIDATION_STRUCT_HAS_PUBLIC_KEY=y
+253a306,310
+> # CONFIG_MCUBOOT_COMPRESSED_IMAGE_SUPPORT_ENABLED is not set
+> # CONFIG_MCUBOOT_BOOTLOADER_SIGNATURE_TYPE_ED25519 is not set
+> # CONFIG_MCUBOOT_BOOTLOADER_SIGNATURE_TYPE_PURE is not set
+> # CONFIG_NCS_MCUBOOT_BOOTLOADER_SIGN_MERGED_BINARY is not set
+> # CONFIG_NCS_MCUBOOT_MANIFEST_UPDATES is not set
+294,347c351
+< 
+< #
+< # nRF Cloud
+< #
+< 
+< #
+< # Client ID (nRF Cloud Device ID)
+< #
+< CONFIG_NRF_CLOUD_CLIENT_ID_SRC_COMPILE_TIME=y
+< CONFIG_NRF_CLOUD_CLIENT_ID=""
+< # end of Client ID (nRF Cloud Device ID)
+< 
+< # CONFIG_NRF_CLOUD_MQTT is not set
+< # CONFIG_NRF_CLOUD_FOTA is not set
+< CONFIG_FOTA_USE_NRF_CLOUD_SETTINGS_AREA=y
+< CONFIG_FOTA_DL_TIMEOUT_MIN=15
+< # CONFIG_NRF_CLOUD_FOTA_FULL_MODEM_UPDATE is not set
+< # CONFIG_NRF_CLOUD_REST is not set
+< # CONFIG_NRF_CLOUD_LOCATION_PARSE_ANCHORS is not set
+< # CONFIG_NRF_CLOUD_ALERT is not set
+< # CONFIG_NRF_CLOUD_ALERT_LOG_LEVEL_OFF is not set
+< # CONFIG_NRF_CLOUD_ALERT_LOG_LEVEL_ERR is not set
+< # CONFIG_NRF_CLOUD_ALERT_LOG_LEVEL_WRN is not set
+< # CONFIG_NRF_CLOUD_ALERT_LOG_LEVEL_INF is not set
+< # CONFIG_NRF_CLOUD_ALERT_LOG_LEVEL_DBG is not set
+< CONFIG_NRF_CLOUD_ALERT_LOG_LEVEL_DEFAULT=y
+< CONFIG_NRF_CLOUD_ALERT_LOG_LEVEL=0
+< CONFIG_NRF_CLOUD_LOG_OUTPUT_LEVEL=1
+< # CONFIG_NRF_CLOUD_LOG_INCLUDE_LEVEL_0 is not set
+< CONFIG_NRF_CLOUD_LOG_BUF_SIZE=256
+< # CONFIG_NRF_CLOUD_LOG_LOG_LEVEL_OFF is not set
+< # CONFIG_NRF_CLOUD_LOG_LOG_LEVEL_ERR is not set
+< # CONFIG_NRF_CLOUD_LOG_LOG_LEVEL_WRN is not set
+< # CONFIG_NRF_CLOUD_LOG_LOG_LEVEL_INF is not set
+< # CONFIG_NRF_CLOUD_LOG_LOG_LEVEL_DBG is not set
+< CONFIG_NRF_CLOUD_LOG_LOG_LEVEL_DEFAULT=y
+< CONFIG_NRF_CLOUD_LOG_LOG_LEVEL=0
+< # CONFIG_NRF_CLOUD_COAP is not set
+< 
+< #
+< # Send shadow info sections on initial connect (MQTT/CoAP)
+< #
+< # end of Send shadow info sections on initial connect (MQTT/CoAP)
+< 
+< # CONFIG_NRF_CLOUD_GATEWAY is not set
+< # CONFIG_NRF_CLOUD_LOG_LEVEL_OFF is not set
+< # CONFIG_NRF_CLOUD_LOG_LEVEL_ERR is not set
+< # CONFIG_NRF_CLOUD_LOG_LEVEL_WRN is not set
+< # CONFIG_NRF_CLOUD_LOG_LEVEL_INF is not set
+< # CONFIG_NRF_CLOUD_LOG_LEVEL_DBG is not set
+< CONFIG_NRF_CLOUD_LOG_LEVEL_DEFAULT=y
+< CONFIG_NRF_CLOUD_LOG_LEVEL=0
+< # end of nRF Cloud
+< 
+---
+> # CONFIG_NRF_CLOUD is not set
+349c353
+< # CONFIG_DOWNLOAD_CLIENT is not set
+---
+> # CONFIG_DOWNLOADER is not set
+362,363d365
+< # CONFIG_WIFI_CREDENTIALS is not set
+< # CONFIG_WIFI_CREDENTIALS_STATIC is not set
+365a368,374
+> # CONFIG_WIFI_PROV_CORE_LOG_LEVEL_OFF is not set
+> # CONFIG_WIFI_PROV_CORE_LOG_LEVEL_ERR is not set
+> # CONFIG_WIFI_PROV_CORE_LOG_LEVEL_WRN is not set
+> # CONFIG_WIFI_PROV_CORE_LOG_LEVEL_INF is not set
+> # CONFIG_WIFI_PROV_CORE_LOG_LEVEL_DBG is not set
+> CONFIG_WIFI_PROV_CORE_LOG_LEVEL_DEFAULT=y
+> CONFIG_WIFI_PROV_CORE_LOG_LEVEL=0
+366a376,377
+> 
+> # CONFIG_OPENTHREAD_RPC is not set
+381d391
+< # CONFIG_NFC_PLATFORM is not set
+384a395
+> # CONFIG_NFC_RPC is not set
+394c405
+< # CONFIG_CPU_LOAD is not set
+---
+> # CONFIG_NRF_CPU_LOAD is not set
+395a407
+> CONFIG_PPI_TRACE_PIN_CNT=8
+413a426,427
+> CONFIG_MPSL_HFCLK_LATENCY=1400
+> CONFIG_MPSL_INIT_PRIORITY=40
+439d452
+< # CONFIG_PM_SINGLE_IMAGE is not set
+455,456d467
+< # CONFIG_ZIGBEE is not set
+< 
+460,466d470
+< # CONFIG_MGMT_FMFU_LOG_LEVEL_OFF is not set
+< # CONFIG_MGMT_FMFU_LOG_LEVEL_ERR is not set
+< # CONFIG_MGMT_FMFU_LOG_LEVEL_WRN is not set
+< # CONFIG_MGMT_FMFU_LOG_LEVEL_INF is not set
+< # CONFIG_MGMT_FMFU_LOG_LEVEL_DBG is not set
+< CONFIG_MGMT_FMFU_LOG_LEVEL_DEFAULT=y
+< CONFIG_MGMT_FMFU_LOG_LEVEL=0
+470c474
+< # SUIT-based Firmware Update Management
+---
+> # Additional MCUmgr configuration
+472,484d475
+< CONFIG_MGMT_SUITFU_TRIGGER_UPDATE_RESET_DELAY_MS=100
+< CONFIG_MGMT_SUITFU_AUTO_REGISTER_HANDLERS=y
+< CONFIG_MGMT_SUITFU_GRP_IMG=y
+< CONFIG_MGMT_SUITFU_IMAGE_NUMBER=0
+< # CONFIG_MGMT_SUITFU_GRP_SUIT is not set
+< # CONFIG_MGMT_SUITFU_LOG_LEVEL_OFF is not set
+< # CONFIG_MGMT_SUITFU_LOG_LEVEL_ERR is not set
+< # CONFIG_MGMT_SUITFU_LOG_LEVEL_WRN is not set
+< # CONFIG_MGMT_SUITFU_LOG_LEVEL_INF is not set
+< # CONFIG_MGMT_SUITFU_LOG_LEVEL_DBG is not set
+< CONFIG_MGMT_SUITFU_LOG_LEVEL_DEFAULT=y
+< CONFIG_MGMT_SUITFU_LOG_LEVEL=0
+< # end of SUIT-based Firmware Update Management
+486c477,479
+< # CONFIG_CAF is not set
+---
+> #
+> # Additional MCUmgr group configuration
+> #
+489c482
+< # Nordic IEEE 802.15.4
+---
+> # Additional MCUmgr OS group management functionality
+491c484
+< # end of Nordic IEEE 802.15.4
+---
+> # end of Additional MCUmgr OS group management functionality
+492a486,493
+> #
+> # Additional MCUmgr image management group functionality
+> #
+> # end of Additional MCUmgr image management group functionality
+> # end of Additional MCUmgr group configuration
+> # end of Additional MCUmgr configuration
+> 
+> # CONFIG_CAF is not set
+499,547c500,520
+< # CONFIG_NRF_SECURITY is not set
+< # CONFIG_PSA_WANT_GENERATE_RANDOM is not set
+< # CONFIG_PSA_WANT_ALG_CTR_DRBG is not set
+< # CONFIG_PSA_WANT_ALG_HMAC_DRBG is not set
+< # CONFIG_PSA_WANT_KEY_TYPE_DERIVE is not set
+< # CONFIG_PSA_WANT_KEY_TYPE_RAW_DATA is not set
+< # CONFIG_PSA_WANT_KEY_TYPE_HMAC is not set
+< # CONFIG_PSA_WANT_KEY_TYPE_PASSWORD is not set
+< # CONFIG_PSA_WANT_KEY_TYPE_PASSWORD_HASH is not set
+< # CONFIG_PSA_WANT_KEY_TYPE_PEPPER is not set
+< # CONFIG_PSA_WANT_KEY_TYPE_AES is not set
+< # CONFIG_PSA_WANT_KEY_TYPE_ARIA is not set
+< # CONFIG_PSA_WANT_KEY_TYPE_DES is not set
+< # CONFIG_PSA_WANT_KEY_TYPE_CAMELLIA is not set
+< # CONFIG_PSA_WANT_KEY_TYPE_SM4 is not set
+< # CONFIG_PSA_WANT_KEY_TYPE_ARC4 is not set
+< # CONFIG_PSA_WANT_KEY_TYPE_ECC_KEY_PAIR is not set
+< # CONFIG_PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY is not set
+< # CONFIG_PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_IMPORT is not set
+< # CONFIG_PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_EXPORT is not set
+< # CONFIG_PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_GENERATE is not set
+< # CONFIG_PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_DERIVE is not set
+< # CONFIG_PSA_WANT_KEY_TYPE_RSA_KEY_PAIR is not set
+< # CONFIG_PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY is not set
+< # CONFIG_PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_IMPORT is not set
+< # CONFIG_PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_EXPORT is not set
+< # CONFIG_PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_GENERATE is not set
+< # CONFIG_PSA_WANT_KEY_TYPE_DH_KEY_PAIR is not set
+< # CONFIG_PSA_WANT_KEY_TYPE_DH_PUBLIC_KEY is not set
+< # CONFIG_PSA_WANT_KEY_TYPE_SPAKE2P_KEY_PAIR_IMPORT is not set
+< # CONFIG_PSA_WANT_KEY_TYPE_SPAKE2P_KEY_PAIR_EXPORT is not set
+< # CONFIG_PSA_WANT_KEY_TYPE_SPAKE2P_KEY_PAIR_DERIVE is not set
+< # CONFIG_PSA_WANT_KEY_TYPE_SPAKE2P_KEY_PAIR is not set
+< # CONFIG_PSA_WANT_KEY_TYPE_SPAKE2P_PUBLIC_KEY is not set
+< # CONFIG_PSA_WANT_KEY_TYPE_SRP_KEY_PAIR_IMPORT is not set
+< # CONFIG_PSA_WANT_KEY_TYPE_SRP_KEY_PAIR_EXPORT is not set
+< # CONFIG_PSA_WANT_KEY_TYPE_SRP_KEY_PAIR_DERIVE is not set
+< # CONFIG_PSA_WANT_KEY_TYPE_SRP_PUBLIC_KEY is not set
+< # CONFIG_PSA_WANT_KEY_TYPE_SRP_KEY_PAIR is not set
+< # CONFIG_PSA_WANT_ALG_CCM is not set
+< # CONFIG_PSA_WANT_ALG_GCM is not set
+< # CONFIG_PSA_WANT_ALG_CHACHA20_POLY1305 is not set
+< # CONFIG_PSA_WANT_ALG_CBC_MAC is not set
+< # CONFIG_PSA_WANT_ALG_CMAC is not set
+< # CONFIG_PSA_WANT_ALG_HMAC is not set
+< # CONFIG_PSA_WANT_ALG_SHA_1 is not set
+< # CONFIG_PSA_WANT_ALG_SHA_224 is not set
+< # CONFIG_PSA_WANT_ALG_SHA_384 is not set
+< # CONFIG_PSA_WANT_ALG_SHA_512 is not set
+---
+> 
+> #
+> # Nordic-added meta types
+> #
+> 
+> #
+> # Nordic added alg types
+> #
+> # CONFIG_PSA_WANT_ALG_ECDSA_ANY is not set
+> # CONFIG_PSA_WANT_ALG_ED25519PH is not set
+> # CONFIG_PSA_WANT_ALG_ED448PH is not set
+> # CONFIG_PSA_WANT_ALG_HSS is not set
+> # CONFIG_PSA_WANT_ALG_LMS is not set
+> # CONFIG_PSA_WANT_ALG_ML_DSA is not set
+> # CONFIG_PSA_WANT_ALG_XMSS is not set
+> # CONFIG_PSA_WANT_ALG_XMSS_MT is not set
+> # CONFIG_PSA_WANT_ALG_ML_KEM is not set
+> # CONFIG_PSA_WANT_ALG_PURE_EDDSA is not set
+> # CONFIG_PSA_WANT_ALG_RSA_PKCS1V15_SIGN_RAW is not set
+> # CONFIG_PSA_WANT_ALG_RSA_PSS_ANY_SALT is not set
+> # CONFIG_PSA_WANT_ALG_SHA_256_192 is not set
+550,565c523,527
+< # CONFIG_PSA_WANT_ALG_SHA3_224 is not set
+< # CONFIG_PSA_WANT_ALG_SHA3_256 is not set
+< # CONFIG_PSA_WANT_ALG_SHA3_384 is not set
+< # CONFIG_PSA_WANT_ALG_SHA3_512 is not set
+< # CONFIG_PSA_WANT_ALG_SM3 is not set
+< # CONFIG_PSA_WANT_ALG_SHAKE256_512 is not set
+< # CONFIG_PSA_WANT_ALG_RIPEMD160 is not set
+< # CONFIG_PSA_WANT_ALG_MD2 is not set
+< # CONFIG_PSA_WANT_ALG_MD4 is not set
+< # CONFIG_PSA_WANT_ALG_MD5 is not set
+< # CONFIG_PSA_WANT_ALG_ECB_NO_PADDING is not set
+< # CONFIG_PSA_WANT_ALG_CBC_NO_PADDING is not set
+< # CONFIG_PSA_WANT_ALG_CBC_PKCS7 is not set
+< # CONFIG_PSA_WANT_ALG_CFB is not set
+< # CONFIG_PSA_WANT_ALG_CTR is not set
+< # CONFIG_PSA_WANT_ALG_OFB is not set
+---
+> # CONFIG_PSA_WANT_ALG_SPAKE2P_HMAC is not set
+> # CONFIG_PSA_WANT_ALG_SPAKE2P_CMAC is not set
+> # CONFIG_PSA_WANT_ALG_SPAKE2P_MATTER is not set
+> # CONFIG_PSA_WANT_ALG_SRP_6 is not set
+> # CONFIG_PSA_WANT_ALG_SRP_PASSWORD_HASH is not set
+567,577c529,543
+< # CONFIG_PSA_WANT_ALG_CCM_STAR_NO_TAG is not set
+< # CONFIG_PSA_WANT_ALG_STREAM_CIPHER is not set
+< # CONFIG_PSA_WANT_ALG_ECDH is not set
+< # CONFIG_PSA_WANT_ALG_FFDH is not set
+< # CONFIG_PSA_WANT_ALG_HKDF_EXTRACT is not set
+< # CONFIG_PSA_WANT_ALG_HKDF_EXPAND is not set
+< # CONFIG_PSA_WANT_ALG_ECDSA is not set
+< # CONFIG_PSA_WANT_ALG_ECDSA_ANY is not set
+< # CONFIG_PSA_WANT_ALG_DETERMINISTIC_ECDSA is not set
+< # CONFIG_PSA_WANT_ECC_BRAINPOOL_P_R1_160 is not set
+< # CONFIG_PSA_WANT_ECC_BRAINPOOL_P_R1_192 is not set
+---
+> # CONFIG_PSA_WANT_ALG_ECB_NO_PADDING is not set
+> # CONFIG_PSA_WANT_ALG_CHACHA20 is not set
+> # CONFIG_PSA_WANT_ALG_XCHACHA20_POLY1305 is not set
+> # CONFIG_PSA_WANT_ALG_SHAKE128_256 is not set
+> # CONFIG_PSA_WANT_ALG_SHAKE256_192 is not set
+> # CONFIG_PSA_WANT_ALG_SHAKE256_256 is not set
+> # CONFIG_PSA_WANT_ALG_SHAKE256_512 is not set
+> # CONFIG_PSA_WANT_ALG_AES_KW is not set
+> # CONFIG_PSA_WANT_ALG_AES_KWP is not set
+> # CONFIG_PSA_WANT_ALG_WPA3_SAE_H2E is not set
+> # CONFIG_PSA_WANT_ALG_WPA3_SAE is not set
+> 
+> #
+> # Nordic added ECC curve types
+> #
+579d544
+< # CONFIG_PSA_WANT_ECC_BRAINPOOL_P_R1_256 is not set
+581,584d545
+< # CONFIG_PSA_WANT_ECC_BRAINPOOL_P_R1_384 is not set
+< # CONFIG_PSA_WANT_ECC_BRAINPOOL_P_R1_512 is not set
+< # CONFIG_PSA_WANT_ECC_MONTGOMERY_255 is not set
+< # CONFIG_PSA_WANT_ECC_MONTGOMERY_448 is not set
+587d547
+< # CONFIG_PSA_WANT_ECC_SECP_K1_192 is not set
+589,602d548
+< # CONFIG_PSA_WANT_ECC_SECP_K1_256 is not set
+< # CONFIG_PSA_WANT_ECC_SECP_R1_192 is not set
+< # CONFIG_PSA_WANT_ECC_SECP_R1_224 is not set
+< # CONFIG_PSA_WANT_ECC_SECP_R1_256 is not set
+< # CONFIG_PSA_WANT_ECC_SECP_R1_384 is not set
+< # CONFIG_PSA_WANT_ECC_SECP_R1_521 is not set
+< # CONFIG_PSA_WANT_ECC_SECP_R2_160 is not set
+< # CONFIG_PSA_WANT_ECC_SECT_K1_163 is not set
+< # CONFIG_PSA_WANT_ECC_SECT_K1_233 is not set
+< # CONFIG_PSA_WANT_ECC_SECT_K1_239 is not set
+< # CONFIG_PSA_WANT_ECC_SECT_K1_283 is not set
+< # CONFIG_PSA_WANT_ECC_SECT_K1_409 is not set
+< # CONFIG_PSA_WANT_ECC_SECT_K1_571 is not set
+< # CONFIG_PSA_WANT_ECC_SECT_R1_163 is not set
+607,623c553,594
+< # CONFIG_PSA_WANT_ECC_SECT_R2_163 is not set
+< # CONFIG_PSA_WANT_ECC_FRP_V1_256 is not set
+< # CONFIG_PSA_WANT_ALG_RSA_OAEP is not set
+< # CONFIG_PSA_WANT_ALG_RSA_PKCS1V15_CRYPT is not set
+< # CONFIG_PSA_WANT_ALG_RSA_PKCS1V15_SIGN is not set
+< # CONFIG_PSA_WANT_ALG_RSA_PKCS1V15_SIGN_RAW is not set
+< # CONFIG_PSA_WANT_ALG_RSA_PSS is not set
+< # CONFIG_PSA_WANT_ALG_RSA_PSS_ANY_SALT is not set
+< # CONFIG_PSA_WANT_ALG_JPAKE is not set
+< # CONFIG_PSA_WANT_ALG_SPAKE2P_HMAC is not set
+< # CONFIG_PSA_WANT_ALG_SPAKE2P_CMAC is not set
+< # CONFIG_PSA_WANT_ALG_SPAKE2P_MATTER is not set
+< # CONFIG_PSA_WANT_ALG_SRP_6 is not set
+< # CONFIG_PSA_WANT_ALG_SRP_PASSWORD_HASH is not set
+< # CONFIG_PSA_WANT_ALG_PURE_EDDSA is not set
+< # CONFIG_PSA_WANT_ALG_ED25519PH is not set
+< # CONFIG_PSA_WANT_ALG_ED448PH is not set
+---
+> 
+> #
+> # Nordic addded RNG configuration
+> #
+> # CONFIG_PSA_WANT_GENERATE_RANDOM is not set
+> 
+> #
+> # Nordic added key types
+> #
+> # CONFIG_PSA_WANT_KEY_TYPE_PEPPER is not set
+> # CONFIG_PSA_WANT_KEY_TYPE_SPAKE2P_KEY_PAIR_IMPORT is not set
+> # CONFIG_PSA_WANT_KEY_TYPE_SPAKE2P_KEY_PAIR_EXPORT is not set
+> # CONFIG_PSA_WANT_KEY_TYPE_SPAKE2P_KEY_PAIR_GENERATE is not set
+> # CONFIG_PSA_WANT_KEY_TYPE_SPAKE2P_KEY_PAIR_DERIVE is not set
+> # CONFIG_PSA_WANT_KEY_TYPE_SPAKE2P_PUBLIC_KEY is not set
+> # CONFIG_PSA_WANT_KEY_TYPE_SRP_KEY_PAIR_IMPORT is not set
+> # CONFIG_PSA_WANT_KEY_TYPE_SRP_KEY_PAIR_EXPORT is not set
+> # CONFIG_PSA_WANT_KEY_TYPE_SRP_KEY_PAIR_GENERATE is not set
+> # CONFIG_PSA_WANT_KEY_TYPE_SRP_KEY_PAIR_DERIVE is not set
+> # CONFIG_PSA_WANT_KEY_TYPE_SRP_PUBLIC_KEY is not set
+> # CONFIG_PSA_WANT_KEY_TYPE_WPA3_SAE_PT is not set
+> # CONFIG_PSA_WANT_KEY_TYPE_XCHACHA20 is not set
+> # CONFIG_PSA_WANT_KEY_TYPE_HSS_PUBLIC_KEY is not set
+> # CONFIG_PSA_WANT_KEY_TYPE_LMS_PUBLIC_KEY is not set
+> # CONFIG_PSA_WANT_KEY_TYPE_XMSS_PUBLIC_KEY is not set
+> # CONFIG_PSA_WANT_KEY_TYPE_XMSS_MT_PUBLIC_KEY is not set
+> # CONFIG_PSA_WANT_ML_DSA_KEY_SIZE_44 is not set
+> # CONFIG_PSA_WANT_ML_DSA_KEY_SIZE_65 is not set
+> # CONFIG_PSA_WANT_ML_DSA_KEY_SIZE_87 is not set
+> # CONFIG_PSA_WANT_KEY_TYPE_ML_DSA_KEY_PAIR_IMPORT is not set
+> # CONFIG_PSA_WANT_KEY_TYPE_ML_DSA_KEY_PAIR_EXPORT is not set
+> # CONFIG_PSA_WANT_KEY_TYPE_ML_DSA_KEY_PAIR_GENERATE is not set
+> # CONFIG_PSA_WANT_KEY_TYPE_ML_DSA_KEY_PAIR_DERIVE is not set
+> # CONFIG_PSA_WANT_KEY_TYPE_ML_DSA_PUBLIC_KEY is not set
+> # CONFIG_PSA_WANT_ML_KEM_KEY_SIZE_512 is not set
+> # CONFIG_PSA_WANT_ML_KEM_KEY_SIZE_768 is not set
+> # CONFIG_PSA_WANT_ML_KEM_KEY_SIZE_1024 is not set
+> # CONFIG_PSA_WANT_KEY_TYPE_ML_KEM_KEY_PAIR_IMPORT is not set
+> # CONFIG_PSA_WANT_KEY_TYPE_ML_KEM_KEY_PAIR_EXPORT is not set
+> # CONFIG_PSA_WANT_KEY_TYPE_ML_KEM_KEY_PAIR_GENERATE is not set
+> # CONFIG_PSA_WANT_KEY_TYPE_ML_KEM_KEY_PAIR_DERIVE is not set
+> # CONFIG_PSA_WANT_KEY_TYPE_ML_KEM_PUBLIC_KEY is not set
+627c598
+< # Audio Module
+---
+> # Audio Modules
+630,638d600
+< CONFIG_AUDIO_MODULE_NAME_SIZE=20
+< # CONFIG_AUDIO_MODULE_LOG_LEVEL_OFF is not set
+< # CONFIG_AUDIO_MODULE_LOG_LEVEL_ERR is not set
+< # CONFIG_AUDIO_MODULE_LOG_LEVEL_WRN is not set
+< # CONFIG_AUDIO_MODULE_LOG_LEVEL_INF is not set
+< # CONFIG_AUDIO_MODULE_LOG_LEVEL_DBG is not set
+< CONFIG_AUDIO_MODULE_LOG_LEVEL_DEFAULT=y
+< CONFIG_AUDIO_MODULE_LOG_LEVEL=0
+< # end of Audio Module
+639a602,613
+> #
+> # Log levels
+> #
+> # end of Log levels
+> # end of Audio Modules
+> 
+> #
+> # Audio Modules
+> #
+> # CONFIG_AUDIO_MODULE_TEMPLATE is not set
+> # end of Audio Modules
+> 
+643c617
+< # SUIT provisioning
+---
+> # Logging over RPC
+645,646c619,621
+< # CONFIG_SUIT_MPI_GENERATE is not set
+< # end of SUIT provisioning
+---
+> # CONFIG_LOG_FORWARDER_RPC is not set
+> CONFIG_LOG_BACKED_RPC_CRASH_INFO_FILENAME_SIZE=1
+> # end of Logging over RPC
+648c623,639
+< # CONFIG_SUIT is not set
+---
+> # CONFIG_NRF_COMPRESS is not set
+> 
+> #
+> # MCUboot IDs (informative only, do not change)
+> #
+> CONFIG_MCUBOOT_APPLICATION_IMAGE_NUMBER=0
+> CONFIG_MCUBOOT_NETWORK_CORE_IMAGE_NUMBER=-1
+> CONFIG_MCUBOOT_WIFI_PATCHES_IMAGE_NUMBER=-1
+> CONFIG_MCUBOOT_QSPI_XIP_IMAGE_NUMBER=-1
+> CONFIG_MCUBOOT_MCUBOOT_IMAGE_NUMBER=-1
+> CONFIG_MCUBOOT_EXTRA_1_IMAGE_NUMBER=-1
+> CONFIG_MCUBOOT_EXTRA_2_IMAGE_NUMBER=-1
+> CONFIG_MCUBOOT_MCUBOOT_S0_S1_VERSION_MAJOR=-1
+> CONFIG_MCUBOOT_MCUBOOT_S0_S1_VERSION_MINOR=-1
+> CONFIG_MCUBOOT_MCUBOOT_S0_S1_VERSION_REVISION=-1
+> CONFIG_MCUBOOT_MCUBOOT_S0_S1_VERSION_BUILD_NUMBER=-1
+> # end of MCUboot IDs (informative only, do not change)
+651,653d641
+< # CONFIG_WPA_SUPP is not set
+< CONFIG_COMMON_LIBC_MALLOC_ARENA_SIZE=0
+< CONFIG_POSIX_MAX_FDS=4
+662c650
+< CONFIG_WFA_QT_THREAD_STACK_SIZE=4096
+---
+> CONFIG_WFA_QT_THREAD_STACK_SIZE=5200
+664c652
+< CONFIG_WFA_QT_DEFAULT_INTERFACE="nordic_wlan0"
+---
+> CONFIG_WFA_QT_DEFAULT_INTERFACE="wlan0"
+669a658
+> # CONFIG_APP_JWT is not set
+685c674
+< # CONFIG_MODEM_INFO is not set
+---
+> # CONFIG_AT_PARSER is not set
+687a677
+> # CONFIG_SUPL_CLIENT_LIB is not set
+695d684
+< # CONFIG_MODEM_JWT is not set
+715a705
+> # CONFIG_FLASH_RPC is not set
+716a707,708
+> # CONFIG_SOC_FLASH_NRF_RADIO_SYNC_RPC is not set
+> CONFIG_SOC_FLASH_NRF_RADIO_SYNC_MPSL_TIMESLOT_SESSION_COUNT=0
+721d712
+< # CONFIG_FLASH_RPC is not set
+732d722
+< CONFIG_ZTEST_MULTICORE_DEFAULT_SETTINGS=y
+738a729
+> # CONFIG_MOCK_NRF_RPC is not set
+744c735
+< # end of nrf (/opt/nordic/ncs/v2.7.0/nrf)
+---
+> # end of nrf (/opt/nordic/ncs/v3.2.2/nrf)
+747c738
+< # mcuboot (/opt/nordic/ncs/v2.7.0/bootloader/mcuboot)
+---
+> # hostap (/opt/nordic/ncs/v3.2.2/modules/lib/hostap)
+748a740,742
+> # CONFIG_WIFI_NM_WPA_SUPPLICANT is not set
+> CONFIG_ZEPHYR_HOSTAP_MODULE=y
+> # end of hostap (/opt/nordic/ncs/v3.2.2/modules/lib/hostap)
+750a745,748
+> # mcuboot (/opt/nordic/ncs/v3.2.2/bootloader/mcuboot)
+> #
+> 
+> #
+753d750
+< CONFIG_SIGN_IMAGES=y
+754a752
+> # CONFIG_USE_NRF53_MULTI_IMAGE_WITHOUT_UPGRADE_ONLY is not set
+758c756
+< # end of mcuboot (/opt/nordic/ncs/v2.7.0/bootloader/mcuboot)
+---
+> # end of mcuboot (/opt/nordic/ncs/v3.2.2/bootloader/mcuboot)
+761c759
+< # mbedtls (/opt/nordic/ncs/v2.7.0/modules/crypto/mbedtls)
+---
+> # mbedtls (/opt/nordic/ncs/v3.2.2/modules/crypto/mbedtls)
+763a762,763
+> # CONFIG_PSA_CRYPTO is not set
+> # end of mbedtls (/opt/nordic/ncs/v3.2.2/modules/crypto/mbedtls)
+766c766
+< # PSA RNG support
+---
+> # oberon-psa-crypto (/opt/nordic/ncs/v3.2.2/modules/crypto/oberon-psa-crypto)
+768,818d767
+< # end of PSA RNG support
+< 
+< #
+< # PSA key type support
+< #
+< # end of PSA key type support
+< 
+< #
+< # PSA AEAD support
+< #
+< # end of PSA AEAD support
+< 
+< #
+< # PSA MAC support
+< #
+< # end of PSA MAC support
+< 
+< #
+< # PSA Hash support
+< #
+< # end of PSA Hash support
+< 
+< #
+< # PSA Cipher support
+< #
+< # end of PSA Cipher support
+< 
+< #
+< # PSA Key agreement support
+< #
+< # end of PSA Key agreement support
+< 
+< #
+< # PSA Key derivation support
+< #
+< # end of PSA Key derivation support
+< 
+< #
+< # PSA Asymmetric support
+< #
+< 
+< #
+< # Elliptic Curve type support
+< #
+< # end of Elliptic Curve type support
+< # end of PSA Asymmetric support
+< # end of mbedtls (/opt/nordic/ncs/v2.7.0/modules/crypto/mbedtls)
+< 
+< #
+< # oberon-psa-crypto (/opt/nordic/ncs/v2.7.0/modules/crypto/oberon-psa-crypto)
+< #
+820c769
+< # end of oberon-psa-crypto (/opt/nordic/ncs/v2.7.0/modules/crypto/oberon-psa-crypto)
+---
+> # end of oberon-psa-crypto (/opt/nordic/ncs/v3.2.2/modules/crypto/oberon-psa-crypto)
+823c772
+< # trusted-firmware-m (/opt/nordic/ncs/v2.7.0/modules/tee/tf-m/trusted-firmware-m)
+---
+> # trusted-firmware-m (/opt/nordic/ncs/v3.2.2/modules/tee/tf-m/trusted-firmware-m)
+826c775
+< # end of trusted-firmware-m (/opt/nordic/ncs/v2.7.0/modules/tee/tf-m/trusted-firmware-m)
+---
+> # end of trusted-firmware-m (/opt/nordic/ncs/v3.2.2/modules/tee/tf-m/trusted-firmware-m)
+829d777
+< CONFIG_ZEPHYR_SOC_HWMV1_MODULE=y
+832c780
+< # cjson (/opt/nordic/ncs/v2.7.0/modules/lib/cjson)
+---
+> # cjson (/opt/nordic/ncs/v3.2.2/modules/lib/cjson)
+833a782
+> # CONFIG_CJSON_LIB is not set
+835c784
+< # end of cjson (/opt/nordic/ncs/v2.7.0/modules/lib/cjson)
+---
+> # end of cjson (/opt/nordic/ncs/v3.2.2/modules/lib/cjson)
+838c787
+< # azure-sdk-for-c (/opt/nordic/ncs/v2.7.0/modules/lib/azure-sdk-for-c)
+---
+> # azure-sdk-for-c (/opt/nordic/ncs/v3.2.2/modules/lib/azure-sdk-for-c)
+842c791
+< # end of azure-sdk-for-c (/opt/nordic/ncs/v2.7.0/modules/lib/azure-sdk-for-c)
+---
+> # end of azure-sdk-for-c (/opt/nordic/ncs/v3.2.2/modules/lib/azure-sdk-for-c)
+845c794
+< # cirrus-logic (/opt/nordic/ncs/v2.7.0/modules/hal/cirrus-logic)
+---
+> # cirrus-logic (/opt/nordic/ncs/v3.2.2/modules/hal/cirrus-logic)
+849c798
+< # end of cirrus-logic (/opt/nordic/ncs/v2.7.0/modules/hal/cirrus-logic)
+---
+> # end of cirrus-logic (/opt/nordic/ncs/v3.2.2/modules/hal/cirrus-logic)
+852c801
+< # openthread (/opt/nordic/ncs/v2.7.0/modules/lib/openthread)
+---
+> # openthread (/opt/nordic/ncs/v3.2.2/modules/lib/openthread)
+856c805
+< # end of openthread (/opt/nordic/ncs/v2.7.0/modules/lib/openthread)
+---
+> # end of openthread (/opt/nordic/ncs/v3.2.2/modules/lib/openthread)
+859c808
+< # suit-generator (/opt/nordic/ncs/v2.7.0/modules/lib/suit-generator)
+---
+> # memfault-firmware-sdk (/opt/nordic/ncs/v3.2.2/modules/lib/memfault-firmware-sdk)
+861,879d809
+< CONFIG_SUIT_ENVELOPE_TEMPLATE=""
+< CONFIG_SUIT_ENVELOPE_TARGET=""
+< CONFIG_SUIT_ENVELOPE_OUTPUT_ARTIFACT="merged.hex"
+< CONFIG_SUIT_ENVELOPE_OUTPUT_MPI_MERGE=y
+< # CONFIG_SUIT_LOCAL_ENVELOPE_GENERATE is not set
+< CONFIG_ZEPHYR_SUIT_GENERATOR_MODULE=y
+< # end of suit-generator (/opt/nordic/ncs/v2.7.0/modules/lib/suit-generator)
+< 
+< #
+< # suit-processor (/opt/nordic/ncs/v2.7.0/modules/lib/suit-processor)
+< #
+< # CONFIG_SUIT_PROCESSOR is not set
+< CONFIG_SUIT_PLATFORM_DRY_RUN_SUPPORT=y
+< CONFIG_ZEPHYR_SUIT_PROCESSOR_MODULE=y
+< # end of suit-processor (/opt/nordic/ncs/v2.7.0/modules/lib/suit-processor)
+< 
+< #
+< # memfault-firmware-sdk (/opt/nordic/ncs/v2.7.0/modules/lib/memfault-firmware-sdk)
+< #
+882c812
+< # end of memfault-firmware-sdk (/opt/nordic/ncs/v2.7.0/modules/lib/memfault-firmware-sdk)
+---
+> # end of memfault-firmware-sdk (/opt/nordic/ncs/v3.2.2/modules/lib/memfault-firmware-sdk)
+885c815
+< # coremark (/opt/nordic/ncs/v2.7.0/modules/benchmark/coremark)
+---
+> # coremark (/opt/nordic/ncs/v3.2.2/modules/benchmark/coremark)
+889c819
+< # end of coremark (/opt/nordic/ncs/v2.7.0/modules/benchmark/coremark)
+---
+> # end of coremark (/opt/nordic/ncs/v3.2.2/modules/benchmark/coremark)
+892c822
+< # canopennode (/opt/nordic/ncs/v2.7.0/modules/lib/canopennode)
+---
+> # canopennode (/opt/nordic/ncs/v3.2.2/modules/lib/canopennode)
+895c825
+< # end of canopennode (/opt/nordic/ncs/v2.7.0/modules/lib/canopennode)
+---
+> # end of canopennode (/opt/nordic/ncs/v3.2.2/modules/lib/canopennode)
+898c828
+< # chre (/opt/nordic/ncs/v2.7.0/modules/lib/chre)
+---
+> # chre (/opt/nordic/ncs/v3.2.2/modules/lib/chre)
+902c832
+< # end of chre (/opt/nordic/ncs/v2.7.0/modules/lib/chre)
+---
+> # end of chre (/opt/nordic/ncs/v3.2.2/modules/lib/chre)
+905c835
+< # lz4 (/opt/nordic/ncs/v2.7.0/modules/lib/lz4)
+---
+> # lz4 (/opt/nordic/ncs/v3.2.2/modules/lib/lz4)
+909c839
+< # end of lz4 (/opt/nordic/ncs/v2.7.0/modules/lib/lz4)
+---
+> # end of lz4 (/opt/nordic/ncs/v3.2.2/modules/lib/lz4)
+911,917d840
+< #
+< # nanopb (/opt/nordic/ncs/v2.7.0/modules/lib/nanopb)
+< #
+< CONFIG_ZEPHYR_NANOPB_MODULE=y
+< # CONFIG_NANOPB is not set
+< # end of nanopb (/opt/nordic/ncs/v2.7.0/modules/lib/nanopb)
+< 
+921c844
+< # zscilib (/opt/nordic/ncs/v2.7.0/modules/lib/zscilib)
+---
+> # zscilib (/opt/nordic/ncs/v3.2.2/modules/lib/zscilib)
+925c848
+< # end of zscilib (/opt/nordic/ncs/v2.7.0/modules/lib/zscilib)
+---
+> # end of zscilib (/opt/nordic/ncs/v3.2.2/modules/lib/zscilib)
+928c851
+< # cmsis (/opt/nordic/ncs/v2.7.0/modules/hal/cmsis)
+---
+> # cmsis (/opt/nordic/ncs/v3.2.2/modules/hal/cmsis)
+932,934c855
+< CONFIG_HAS_CMSIS_CORE_M=y
+< # CONFIG_CMSIS_M_CHECK_DEVICE_DEFINES is not set
+< # end of cmsis (/opt/nordic/ncs/v2.7.0/modules/hal/cmsis)
+---
+> # end of cmsis (/opt/nordic/ncs/v3.2.2/modules/hal/cmsis)
+937c858
+< # cmsis-dsp (/opt/nordic/ncs/v2.7.0/modules/lib/cmsis-dsp)
+---
+> # cmsis-dsp (/opt/nordic/ncs/v3.2.2/modules/lib/cmsis-dsp)
+941c862
+< # end of cmsis-dsp (/opt/nordic/ncs/v2.7.0/modules/lib/cmsis-dsp)
+---
+> # end of cmsis-dsp (/opt/nordic/ncs/v3.2.2/modules/lib/cmsis-dsp)
+944c865
+< # cmsis-nn (/opt/nordic/ncs/v2.7.0/modules/lib/cmsis-nn)
+---
+> # cmsis-nn (/opt/nordic/ncs/v3.2.2/modules/lib/cmsis-nn)
+948c869
+< # end of cmsis-nn (/opt/nordic/ncs/v2.7.0/modules/lib/cmsis-nn)
+---
+> # end of cmsis-nn (/opt/nordic/ncs/v3.2.2/modules/lib/cmsis-nn)
+951c872
+< # fatfs (/opt/nordic/ncs/v2.7.0/modules/fs/fatfs)
+---
+> # cmsis_6 (/opt/nordic/ncs/v3.2.2/modules/hal/cmsis_6)
+952a874,881
+> CONFIG_ZEPHYR_CMSIS_6_MODULE=y
+> CONFIG_HAS_CMSIS_CORE_M=y
+> # CONFIG_CMSIS_M_CHECK_DEVICE_DEFINES is not set
+> # end of cmsis_6 (/opt/nordic/ncs/v3.2.2/modules/hal/cmsis_6)
+> 
+> #
+> # fatfs (/opt/nordic/ncs/v3.2.2/modules/fs/fatfs)
+> #
+954c883
+< # end of fatfs (/opt/nordic/ncs/v2.7.0/modules/fs/fatfs)
+---
+> # end of fatfs (/opt/nordic/ncs/v3.2.2/modules/fs/fatfs)
+957c886
+< # hal_nordic (/opt/nordic/ncs/v2.7.0/modules/hal/nordic)
+---
+> # hal_nordic (/opt/nordic/ncs/v3.2.2/modules/hal/nordic)
+966d894
+< # CONFIG_NRF_802154_RADIO_DRIVER is not set
+986d913
+< # CONFIG_MPSL is not set
+987a915
+> # CONFIG_NRFX_CLOCK_USE_LFRC_CALIBRATION is not set
+988a917,922
+> # CONFIG_NRFX_CLOCK_LF_CAL_ENABLED is not set
+> # CONFIG_NRFX_CLOCK_LF_SRC_RC is not set
+> CONFIG_NRFX_CLOCK_LF_SRC_XTAL=y
+> # CONFIG_NRFX_CLOCK_LF_SRC_SYNTH is not set
+> # CONFIG_NRFX_CLOCK_LF_SRC_LOW_SWING is not set
+> # CONFIG_NRFX_CLOCK_LF_SRC_FULL_SWING is not set
+998c932,934
+< # CONFIG_NRFX_I2S0 is not set
+---
+> # CONFIG_NRFX_GPPI is not set
+> # CONFIG_NRFX_I2S is not set
+> # CONFIG_NRFX_LPCOMP is not set
+1003,1008c939,940
+< # CONFIG_NRFX_PPI is not set
+< # CONFIG_NRFX_PWM0 is not set
+< # CONFIG_NRFX_PWM1 is not set
+< # CONFIG_NRFX_PWM2 is not set
+< # CONFIG_NRFX_PWM3 is not set
+< # CONFIG_NRFX_QDEC0 is not set
+---
+> # CONFIG_NRFX_PWM is not set
+> # CONFIG_NRFX_QDEC is not set
+1015,1018c947,950
+< # CONFIG_NRFX_SPIM0 is not set
+< # CONFIG_NRFX_SPIM1 is not set
+< # CONFIG_NRFX_SPIM2 is not set
+< # CONFIG_NRFX_SPIM3 is not set
+---
+> # CONFIG_NRFX_SPI0 is not set
+> # CONFIG_NRFX_SPI1 is not set
+> # CONFIG_NRFX_SPI2 is not set
+> # CONFIG_NRFX_SPIM is not set
+1021,1025c953,954
+< # CONFIG_NRFX_TIMER0 is not set
+< # CONFIG_NRFX_TIMER1 is not set
+< # CONFIG_NRFX_TIMER2 is not set
+< # CONFIG_NRFX_TIMER3 is not set
+< # CONFIG_NRFX_TIMER4 is not set
+---
+> # CONFIG_NRFX_TIMER is not set
+> # CONFIG_NRFX_TWI0 is not set
+1027,1029c956,959
+< # CONFIG_NRFX_TWIM0 is not set
+< # CONFIG_NRFX_UARTE0 is not set
+< # CONFIG_NRFX_UARTE1 is not set
+---
+> # CONFIG_NRFX_TWIM is not set
+> # CONFIG_NRFX_TWIS is not set
+> # CONFIG_NRFX_UART0 is not set
+> # CONFIG_NRFX_UARTE is not set
+1031d960
+< CONFIG_NRFX_WDT0=y
+1041a971,972
+> 
+> CONFIG_NRFX_RESERVED_RESOURCES_HEADER="nrfx_reserved_resources_ncs.h"
+1043c974
+< # end of hal_nordic (/opt/nordic/ncs/v2.7.0/modules/hal/nordic)
+---
+> # end of hal_nordic (/opt/nordic/ncs/v3.2.2/modules/hal/nordic)
+1046c977
+< # hal_st (/opt/nordic/ncs/v2.7.0/modules/hal/st)
+---
+> # hal_st (/opt/nordic/ncs/v3.2.2/modules/hal/st)
+1049c980
+< # end of hal_st (/opt/nordic/ncs/v2.7.0/modules/hal/st)
+---
+> # end of hal_st (/opt/nordic/ncs/v3.2.2/modules/hal/st)
+1050a982,993
+> #
+> # hal_tdk (/opt/nordic/ncs/v3.2.2/modules/hal/tdk)
+> #
+> CONFIG_ZEPHYR_HAL_TDK_MODULE=y
+> 
+> #
+> # TDK drivers
+> #
+> # CONFIG_TDK_HAL is not set
+> # end of TDK drivers
+> # end of hal_tdk (/opt/nordic/ncs/v3.2.2/modules/hal/tdk)
+> 
+1052d994
+< CONFIG_ZEPHYR_LIBMETAL_MODULE=y
+1055c997
+< # liblc3 (/opt/nordic/ncs/v2.7.0/modules/lib/liblc3)
+---
+> # liblc3 (/opt/nordic/ncs/v3.2.2/modules/lib/liblc3)
+1058,1059c1000
+< # CONFIG_LIBLC3 is not set
+< # end of liblc3 (/opt/nordic/ncs/v2.7.0/modules/lib/liblc3)
+---
+> # end of liblc3 (/opt/nordic/ncs/v3.2.2/modules/lib/liblc3)
+1060a1002,1003
+> CONFIG_ZEPHYR_LIBMETAL_MODULE=y
+> 
+1062c1005
+< # littlefs (/opt/nordic/ncs/v2.7.0/modules/fs/littlefs)
+---
+> # littlefs (/opt/nordic/ncs/v3.2.2/modules/fs/littlefs)
+1065c1008
+< # end of littlefs (/opt/nordic/ncs/v2.7.0/modules/fs/littlefs)
+---
+> # end of littlefs (/opt/nordic/ncs/v3.2.2/modules/fs/littlefs)
+1068c1011
+< # loramac-node (/opt/nordic/ncs/v2.7.0/modules/lib/loramac-node)
+---
+> # loramac-node (/opt/nordic/ncs/v3.2.2/modules/lib/loramac-node)
+1072c1015
+< # end of loramac-node (/opt/nordic/ncs/v2.7.0/modules/lib/loramac-node)
+---
+> # end of loramac-node (/opt/nordic/ncs/v3.2.2/modules/lib/loramac-node)
+1075c1018
+< # lvgl (/opt/nordic/ncs/v2.7.0/modules/lib/gui/lvgl)
+---
+> # lvgl (/opt/nordic/ncs/v3.2.2/modules/lib/gui/lvgl)
+1078c1021
+< # end of lvgl (/opt/nordic/ncs/v2.7.0/modules/lib/gui/lvgl)
+---
+> # end of lvgl (/opt/nordic/ncs/v3.2.2/modules/lib/gui/lvgl)
+1081c1024,1038
+< CONFIG_ZEPHYR_NRF_HW_MODELS_MODULE=y
+---
+> 
+> #
+> # nanopb (/opt/nordic/ncs/v3.2.2/modules/lib/nanopb)
+> #
+> CONFIG_ZEPHYR_NANOPB_MODULE=y
+> # CONFIG_NANOPB is not set
+> # end of nanopb (/opt/nordic/ncs/v3.2.2/modules/lib/nanopb)
+> 
+> #
+> # nrf_wifi (/opt/nordic/ncs/v3.2.2/modules/lib/nrf_wifi)
+> #
+> CONFIG_ZEPHYR_NRF_WIFI_MODULE=y
+> # CONFIG_NRF70_BUSLIB is not set
+> # end of nrf_wifi (/opt/nordic/ncs/v3.2.2/modules/lib/nrf_wifi)
+> 
+1085c1042
+< # picolibc (/opt/nordic/ncs/v2.7.0/modules/lib/picolibc)
+---
+> # percepio (/opt/nordic/ncs/v3.2.2/modules/debug/percepio)
+1086a1044,1054
+> 
+> #
+> # Percepio Tracealyzer support can be enabled from the tracing subsystem
+> #
+> # CONFIG_PERCEPIO_DFM is not set
+> CONFIG_ZEPHYR_PERCEPIO_MODULE=y
+> # end of percepio (/opt/nordic/ncs/v3.2.2/modules/debug/percepio)
+> 
+> #
+> # picolibc (/opt/nordic/ncs/v3.2.2/modules/lib/picolibc)
+> #
+1089c1057
+< # end of picolibc (/opt/nordic/ncs/v2.7.0/modules/lib/picolibc)
+---
+> # end of picolibc (/opt/nordic/ncs/v3.2.2/modules/lib/picolibc)
+1092c1060
+< # segger (/opt/nordic/ncs/v2.7.0/modules/debug/segger)
+---
+> # segger (/opt/nordic/ncs/v3.2.2/modules/debug/segger)
+1097a1066
+> CONFIG_SEGGER_RTT_CB_ALIGNMENT=16
+1108c1077
+< CONFIG_SEGGER_RTT_SECTION_NONE=y
+---
+> # CONFIG_SEGGER_RTT_SECTION_NONE is not set
+1111,1113c1080,1086
+< # end of segger (/opt/nordic/ncs/v2.7.0/modules/debug/segger)
+< 
+< CONFIG_ZEPHYR_TINYCRYPT_MODULE=y
+---
+> CONFIG_SEGGER_RTT_SECTION_CUSTOM=y
+> # CONFIG_SEGGER_RTT_SECTION_CUSTOM_DTS_REGION is not set
+> CONFIG_SEGGER_RTT_SECTION_CUSTOM_NAME=".rtt_buff_data"
+> # CONFIG_SEGGER_RTT_INIT_MODE_ALWAYS is not set
+> CONFIG_SEGGER_RTT_INIT_MODE_STRONG_CHECK=y
+> # CONFIG_SEGGER_RTT_INIT_MODE_WEAK_CHECK is not set
+> # end of segger (/opt/nordic/ncs/v3.2.2/modules/debug/segger)
+1116c1089
+< # uoscore-uedhoc (/opt/nordic/ncs/v2.7.0/modules/lib/uoscore-uedhoc)
+---
+> # uoscore-uedhoc (/opt/nordic/ncs/v3.2.2/modules/lib/uoscore-uedhoc)
+1119c1092
+< # end of uoscore-uedhoc (/opt/nordic/ncs/v2.7.0/modules/lib/uoscore-uedhoc)
+---
+> # end of uoscore-uedhoc (/opt/nordic/ncs/v3.2.2/modules/lib/uoscore-uedhoc)
+1122c1095
+< # zcbor (/opt/nordic/ncs/v2.7.0/modules/lib/zcbor)
+---
+> # zcbor (/opt/nordic/ncs/v3.2.2/modules/lib/zcbor)
+1126c1099
+< # end of zcbor (/opt/nordic/ncs/v2.7.0/modules/lib/zcbor)
+---
+> # end of zcbor (/opt/nordic/ncs/v3.2.2/modules/lib/zcbor)
+1129c1102
+< # nrfxlib (/opt/nordic/ncs/v2.7.0/nrfxlib)
+---
+> # nrfxlib (/opt/nordic/ncs/v3.2.2/nrfxlib)
+1138a1112
+> CONFIG_NRF_MODEM_SHMEM_CTRL_SIZE=0x4e8
+1141d1114
+< CONFIG_NRF_MODEM_SHMEM_CTRL_SIZE=0x4e8
+1143a1117
+> # CONFIG_MPSL is not set
+1164c1138
+< # end of nrfxlib (/opt/nordic/ncs/v2.7.0/nrfxlib)
+---
+> # end of nrfxlib (/opt/nordic/ncs/v3.2.2/nrfxlib)
+1165a1140,1141
+> CONFIG_ZEPHYR_NRF_HW_MODELS_MODULE=y
+> 
+1167c1143
+< # connectedhomeip (/opt/nordic/ncs/v2.7.0/modules/lib/matter)
+---
+> # connectedhomeip (/opt/nordic/ncs/v3.2.2/modules/lib/matter)
+1171c1147
+< # end of connectedhomeip (/opt/nordic/ncs/v2.7.0/modules/lib/matter)
+---
+> # end of connectedhomeip (/opt/nordic/ncs/v3.2.2/modules/lib/matter)
+1182c1158,1164
+< # CONFIG_WIFI_NM_WPA_SUPPLICANT is not set
+---
+> # CONFIG_MCUBOOT_UTIL_LOG_LEVEL_OFF is not set
+> # CONFIG_MCUBOOT_UTIL_LOG_LEVEL_ERR is not set
+> # CONFIG_MCUBOOT_UTIL_LOG_LEVEL_WRN is not set
+> # CONFIG_MCUBOOT_UTIL_LOG_LEVEL_INF is not set
+> # CONFIG_MCUBOOT_UTIL_LOG_LEVEL_DBG is not set
+> CONFIG_MCUBOOT_UTIL_LOG_LEVEL_DEFAULT=y
+> CONFIG_MCUBOOT_UTIL_LOG_LEVEL=0
+1188a1171,1174
+> # hal_bouffalolab module not available.
+> #
+> 
+> #
+1192a1179,1186
+> # hal_nxp module not available.
+> #
+> 
+> #
+> # libsbc module not available.
+> #
+> 
+> #
+1196a1191,1194
+> # LoRa Basics Modem module not available.
+> #
+> 
+> #
+1213,1214c1211
+< CONFIG_BOARD_ENABLE_DCDC=y
+< CONFIG_BOARD_ENABLE_DCDC_HV=y
+---
+> CONFIG_BOARD_REVISION_10_1_0=y
+1219a1217,1218
+> CONFIG_SOC="nrf52840"
+> CONFIG_SOC_SERIES="nrf52"
+1225c1224
+< # CONFIG_MFD is not set
+---
+> # CONFIG_HWINFO is not set
+1226a1226,1228
+> CONFIG_SOC_COMPATIBLE_NRF=y
+> CONFIG_SOC_COMPATIBLE_NRF52X=y
+> CONFIG_SOC_NORDIC_BSP_NAME="stable"
+1260,1265c1262,1267
+< CONFIG_HAS_HW_NRF_TWI1=y
+< CONFIG_HAS_HW_NRF_TWIM0=y
+< CONFIG_HAS_HW_NRF_WDT0=y
+< CONFIG_SOC_DCDC_NRF52X=y
+< CONFIG_SOC_DCDC_NRF52X_HV=y
+< # CONFIG_GPIO_AS_PINRESET is not set
+---
+> CONFIG_HAS_NORDIC_RAM_CTRL=y
+> # CONFIG_NRF_FORCE_RAM_ON_REBOOT is not set
+> # CONFIG_NRF_SYS_EVENT is not set
+> # CONFIG_NRF_PERIPHCONF_SECTION is not set
+> # CONFIG_IS_IRONSIDE_SE_SECONDARY_IMAGE is not set
+> # CONFIG_IS_GEN_UICR_IMAGE is not set
+1267a1270
+> # CONFIG_SOC_NRF54H20_PM_S2RAM_OVERRIDE is not set
+1269d1271
+< # CONFIG_NFCT_PINS_AS_GPIOS is not set
+1283,1284d1284
+< CONFIG_SOC_COMPATIBLE_NRF=y
+< CONFIG_SOC_COMPATIBLE_NRF52X=y
+1286d1285
+< CONFIG_ARCH_HAS_SINGLE_THREAD_SUPPORT=y
+1287a1287
+> CONFIG_ARCH_HAS_SINGLE_THREAD_SUPPORT=y
+1289,1290d1288
+< CONFIG_KOBJECT_TEXT_AREA=256
+< CONFIG_ARM_MPU=y
+1303a1302
+> # CONFIG_PLATFORM_SPECIFIC_INIT is not set
+1323d1321
+< # CONFIG_ZERO_LATENCY_IRQS is not set
+1346a1345,1346
+> CONFIG_ARCH_SUPPORTS_ROM_OFFSET=y
+> CONFIG_ARM_MPU=y
+1356,1357c1356
+< CONFIG_KOBJECT_DATA_AREA_RESERVE_EXTRA_PERCENT=100
+< CONFIG_KOBJECT_RODATA_AREA_EXTRA_BYTES=16
+---
+> # CONFIG_NOINIT_SNIPPET_FIRST is not set
+1359a1359
+> # CONFIG_FRAME_POINTER is not set
+1364d1363
+< CONFIG_ISR_TABLES_LOCAL_DECLARATION_SUPPORTED=y
+1365a1365
+> CONFIG_ARCH_DEVICE_STATE_ALIGN=4
+1367a1368
+> # CONFIG_SRAM_SW_ISR_TABLE is not set
+1377a1379
+> CONFIG_ARCH_HAS_VECTOR_TABLE_RELOCATION=y
+1379a1382,1383
+> CONFIG_ARCH_SUPPORTS_COREDUMP_THREADS=y
+> CONFIG_ARCH_SUPPORTS_COREDUMP_STACK_PTR=y
+1416c1420
+< # CONFIG_ARCH_CPU_IDLE_CUSTOM is not set
+---
+> CONFIG_ARCH_HAS_CUSTOM_SWAP_TO_MAIN=y
+1429d1432
+< CONFIG_NUM_PREEMPT_PRIORITIES=0
+1437c1440,1441
+< CONFIG_SCHED_DUMB=y
+---
+> # CONFIG_SCHED_DUMB is not set
+> CONFIG_SCHED_SIMPLE=y
+1439a1444
+> # CONFIG_WAITQ_DUMB is not set
+1441c1446
+< CONFIG_WAITQ_DUMB=y
+---
+> CONFIG_WAITQ_SIMPLE=y
+1445a1451
+> CONFIG_LIBC_ERRNO=y
+1446a1453
+> CONFIG_CURRENT_THREAD_USE_TLS=y
+1451a1459
+> # CONFIG_BOOT_CLEAR_SCREEN is not set
+1457a1466
+> # CONFIG_WORKQUEUE_WORK_TIMEOUT is not set
+1462a1472
+> CONFIG_SYSTEM_WORKQUEUE_WORK_TIMEOUT_MS=0
+1485a1496
+> # CONFIG_MEM_SLAB_POINTER_VALIDATE is not set
+1488,1490d1498
+< # CONFIG_EVENTS is not set
+< # CONFIG_PIPES is not set
+< CONFIG_KERNEL_MEM_POOL=y
+1494d1501
+< CONFIG_ARCH_HAS_CUSTOM_SWAP_TO_MAIN=y
+1496d1502
+< CONFIG_SYS_CLOCK_EXISTS=y
+1515d1520
+< CONFIG_MP_NUM_CPUS=1
+1520c1525,1528
+< # CONFIG_THREAD_LOCAL_STORAGE is not set
+---
+> CONFIG_THREAD_LOCAL_STORAGE=y
+> CONFIG_TOOLCHAIN_SUPPORTS_STATIC_INIT_GNU=y
+> # CONFIG_STATIC_INIT_GNU is not set
+> # CONFIG_BOOTARGS is not set
+1526d1533
+< # CONFIG_DEVICE_DEPS is not set
+1527a1535,1536
+> # CONFIG_DEVICE_DT_METADATA is not set
+> CONFIG_DEVICE_DEINIT_SUPPORT=y
+1533a1543
+> CONFIG_KERNEL_INIT_PRIORITY_LIBC=35
+1541a1552,1556
+> 
+> #
+> # MMU Features
+> #
+> # end of MMU Features
+1544a1560,1571
+> # SoC and Board Hooks
+> #
+> # CONFIG_SOC_EARLY_RESET_HOOK is not set
+> # CONFIG_SOC_PREP_HOOK is not set
+> # CONFIG_SOC_EARLY_INIT_HOOK is not set
+> # CONFIG_SOC_LATE_INIT_HOOK is not set
+> # CONFIG_SOC_PER_CORE_INIT_HOOK is not set
+> # CONFIG_BOARD_EARLY_INIT_HOOK is not set
+> # CONFIG_BOARD_LATE_INIT_HOOK is not set
+> # end of SoC and Board Hooks
+> 
+> #
+1560a1588
+> CONFIG_CLOCK_CONTROL_NRF_K32SRC_FREQUENCY=32768
+1575a1604
+> # CONFIG_COMPARATOR is not set
+1576a1606
+> # CONFIG_CRC_DRIVER is not set
+1579a1610
+> # CONFIG_DEBUG_DRIVER is not set
+1582a1614
+> # CONFIG_DP_DRIVER is not set
+1586a1619,1625
+> 
+> #
+> # Firmware drivers
+> #
+> # CONFIG_ARM_SCMI is not set
+> # end of Firmware drivers
+> 
+1587a1627
+> CONFIG_FLASH_HAS_EXPLICIT_ERASE=y
+1590,1597d1629
+< CONFIG_FLASH=y
+< # CONFIG_FLASH_LOG_LEVEL_OFF is not set
+< # CONFIG_FLASH_LOG_LEVEL_ERR is not set
+< # CONFIG_FLASH_LOG_LEVEL_WRN is not set
+< # CONFIG_FLASH_LOG_LEVEL_INF is not set
+< # CONFIG_FLASH_LOG_LEVEL_DBG is not set
+< CONFIG_FLASH_LOG_LEVEL_DEFAULT=y
+< CONFIG_FLASH_LOG_LEVEL=0
+1599a1632,1640
+> 
+> #
+> # MSPI flash device driver
+> #
+> # end of MSPI flash device driver
+> 
+> CONFIG_NORDIC_QSPI_NOR_INIT_PRIORITY=41
+> CONFIG_NORDIC_QSPI_NOR_TIMEOUT_MS=500
+> # CONFIG_SOC_FLASH_NRF_CUSTOM_CONTEXT is not set
+1605,1606c1646,1652
+< CONFIG_NORDIC_QSPI_NOR_INIT_PRIORITY=41
+< CONFIG_NORDIC_QSPI_NOR_TIMEOUT_MS=500
+---
+> # CONFIG_FLASH_LOG_LEVEL_OFF is not set
+> # CONFIG_FLASH_LOG_LEVEL_ERR is not set
+> # CONFIG_FLASH_LOG_LEVEL_WRN is not set
+> # CONFIG_FLASH_LOG_LEVEL_INF is not set
+> # CONFIG_FLASH_LOG_LEVEL_DBG is not set
+> CONFIG_FLASH_LOG_LEVEL_DEFAULT=y
+> CONFIG_FLASH_LOG_LEVEL=0
+1623c1669
+< # CONFIG_HWINFO is not set
+---
+> # CONFIG_HAPTICS is not set
+1640d1685
+< # CONFIG_INTC_ESP32 is not set
+1644d1688
+< # CONFIG_KSCAN is not set
+1647a1692
+> # CONFIG_MBOX is not set
+1654a1700,1704
+> 
+> #
+> # Interconn Drivers
+> #
+> # end of Interconn Drivers
+1657a1708
+> # CONFIG_MSPI is not set
+1660a1712
+> CONFIG_PINCTRL=y
+1669a1722,1723
+> CONFIG_PINCTRL_KEEP_SLEEP_STATE=y
+> # CONFIG_PINCTRL_NPCX_EX is not set
+1672a1727
+> # CONFIG_PSI5 is not set
+1675d1729
+< # CONFIG_REGULATOR is not set
+1678a1733
+> # CONFIG_SENT is not set
+1679a1735
+> # CONFIG_STEPPER is not set
+1688a1745
+> CONFIG_NRF_RTC_TIMER=y
+1689a1747
+> CONFIG_NRF_RTC_COUNTER_BIT_WIDTH=24
+1699a1758,1761
+> 
+> #
+> # USB common
+> #
+1707a1770,1771
+> # end of USB common
+> 
+1718a1783,1790
+> # CONFIG_VIRTIO is not set
+> # CONFIG_VIRTIO_LOG_LEVEL_OFF is not set
+> # CONFIG_VIRTIO_LOG_LEVEL_ERR is not set
+> # CONFIG_VIRTIO_LOG_LEVEL_WRN is not set
+> # CONFIG_VIRTIO_LOG_LEVEL_INF is not set
+> # CONFIG_VIRTIO_LOG_LEVEL_DBG is not set
+> CONFIG_VIRTIO_LOG_LEVEL_DEFAULT=y
+> CONFIG_VIRTIO_LOG_LEVEL=0
+1720a1793
+> # CONFIG_TEE is not set
+1724a1798
+> # CONFIG_LIBC_ALLOW_LESS_THAN_64BIT_TIME is not set
+1733,1734c1807,1808
+< CONFIG_MINIMAL_LIBC=y
+< # CONFIG_PICOLIBC is not set
+---
+> # CONFIG_MINIMAL_LIBC is not set
+> CONFIG_PICOLIBC=y
+1739c1813,1815
+< CONFIG_COMMON_LIBC_GMTIME_R=y
+---
+> # CONFIG_COMMON_LIBC_ASCTIME_R is not set
+> # CONFIG_COMMON_LIBC_CTIME_R is not set
+> CONFIG_COMMON_LIBC_TIME=y
+1743,1752c1819,1825
+< CONFIG_COMMON_LIBC_STRNLEN=y
+< CONFIG_MINIMAL_LIBC_NON_REENTRANT_FUNCTIONS=y
+< CONFIG_MINIMAL_LIBC_MALLOC=y
+< CONFIG_MINIMAL_LIBC_MALLOC_ARENA_SIZE=-2
+< CONFIG_MINIMAL_LIBC_CALLOC=y
+< CONFIG_MINIMAL_LIBC_REALLOCARRAY=y
+< # CONFIG_MINIMAL_LIBC_LL_PRINTF is not set
+< # CONFIG_MINIMAL_LIBC_RAND is not set
+< CONFIG_MINIMAL_LIBC_TIME=y
+< # CONFIG_MINIMAL_LIBC_STRING_ERROR_TABLE is not set
+---
+> # CONFIG_COMMON_LIBC_REMOVE is not set
+> # CONFIG_PICOLIBC_USE_MODULE is not set
+> CONFIG_PICOLIBC_USE_TOOLCHAIN=y
+> # CONFIG_PICOLIBC_IO_FLOAT is not set
+> # CONFIG_PICOLIBC_IO_LONG_LONG is not set
+> # CONFIG_PICOLIBC_IO_INTEGER is not set
+> CONFIG_PICOLIBC_IO_MINIMAL=y
+1760,1766d1832
+< 
+< #
+< # Deprecated
+< #
+< # CONFIG_CPLUSPLUS is not set
+< # CONFIG_LIB_CPLUSPLUS is not set
+< # end of Deprecated
+1769,1770d1834
+< # CONFIG_CRC is not set
+< 
+1790d1853
+< # CONFIG_SYS_HEAP_VALIDATE is not set
+1794a1858
+> CONFIG_SYS_HEAP_ARRAY_SIZE=0
+1808a1873,1874
+> # CONFIG_NET_BUF is not set
+> 
+1812a1879
+> CONFIG_ZVFS_OPEN_MAX=4
+1823,1824c1890
+< # CONFIG_CBPRINTF_FP_ALWAYS_A is not set
+< CONFIG_CBPRINTF_LIBC_SUBSTS=y
+---
+> # CONFIG_CBPRINTF_LIBC_SUBSTS is not set
+1834a1901
+> # CONFIG_ZVFS is not set
+1844a1912,1916
+> CONFIG_POSIX_AEP_CHOICE_NONE=y
+> # CONFIG_POSIX_AEP_CHOICE_BASE is not set
+> # CONFIG_POSIX_AEP_CHOICE_PSE51 is not set
+> # CONFIG_POSIX_AEP_CHOICE_PSE52 is not set
+> # CONFIG_POSIX_AEP_CHOICE_PSE53 is not set
+1846,1856c1918,1920
+< # CONFIG_POSIX_CLOCK is not set
+< # CONFIG_POSIX_CONFSTR is not set
+< # CONFIG_POSIX_ENV is not set
+< # CONFIG_POSIX_ENV_LOG_LEVEL_OFF is not set
+< # CONFIG_POSIX_ENV_LOG_LEVEL_ERR is not set
+< # CONFIG_POSIX_ENV_LOG_LEVEL_WRN is not set
+< # CONFIG_POSIX_ENV_LOG_LEVEL_INF is not set
+< # CONFIG_POSIX_ENV_LOG_LEVEL_DBG is not set
+< CONFIG_POSIX_ENV_LOG_LEVEL_DEFAULT=y
+< CONFIG_POSIX_ENV_LOG_LEVEL=0
+< # CONFIG_EVENTFD is not set
+---
+> # CONFIG_POSIX_BARRIERS is not set
+> # CONFIG_POSIX_C_LANG_SUPPORT_R is not set
+> # CONFIG_POSIX_C_LIB_EXT is not set
+1859c1923
+< # File descriptor table options
+---
+> # POSIX device I/O
+1861c1925,1927
+< # end of File descriptor table options
+---
+> # CONFIG_POSIX_DEVICE_IO is not set
+> CONFIG_POSIX_OPEN_MAX=4
+> # end of POSIX device I/O
+1863,1864c1929,1931
+< # CONFIG_FNMATCH is not set
+< # CONFIG_POSIX_MQUEUE is not set
+---
+> # CONFIG_POSIX_FD_MGMT is not set
+> # CONFIG_POSIX_FILE_SYSTEM_R is not set
+> # CONFIG_POSIX_FILE_SYSTEM is not set
+1867c1934
+< # sem_t support
+---
+> # POSIX memory
+1869,1871c1936,1940
+< CONFIG_SEM_VALUE_MAX=32767
+< CONFIG_SEM_NAMELEN_MAX=16
+< # end of sem_t support
+---
+> CONFIG_POSIX_PAGE_SIZE=0x40
+> # CONFIG_POSIX_SHARED_MEMORY_OBJECTS is not set
+> # CONFIG_POSIX_MAPPED_FILES is not set
+> # CONFIG_POSIX_MEMORY_PROTECTION is not set
+> # end of POSIX memory
+1873,1880c1942,1946
+< #
+< # Signal support
+< #
+< CONFIG_POSIX_RTSIG_MAX=0
+< # CONFIG_POSIX_SIGNAL is not set
+< # end of Signal support
+< 
+< # CONFIG_POSIX_PUTMSG is not set
+---
+> # CONFIG_POSIX_MESSAGE_PASSING is not set
+> # CONFIG_POSIX_SINGLE_PROCESS is not set
+> # CONFIG_POSIX_MULTI_PROCESS is not set
+> # CONFIG_POSIX_THREADS is not set
+> # CONFIG_POSIX_READER_WRITER_LOCKS is not set
+1883c1949
+< # Sysconf support
+---
+> # POSIX scheduler options
+1885,1887c1951,1952
+< # CONFIG_POSIX_SYSCONF is not set
+< CONFIG_POSIX_PAGE_SIZE_BITS=6
+< # end of Sysconf support
+---
+> # CONFIG_POSIX_PRIORITY_SCHEDULING is not set
+> # end of POSIX scheduler options
+1889,1891c1954,1997
+< # CONFIG_POSIX_SYSLOG is not set
+< # CONFIG_TIMER is not set
+< # CONFIG_POSIX_UNAME is not set
+---
+> # CONFIG_POSIX_SEMAPHORES is not set
+> 
+> #
+> # POSIX signals
+> #
+> # CONFIG_POSIX_REALTIME_SIGNALS is not set
+> # CONFIG_POSIX_SIGNALS is not set
+> # end of POSIX signals
+> 
+> # CONFIG_POSIX_SPIN_LOCKS is not set
+> 
+> #
+> # POSIX synchronized I/O
+> #
+> # CONFIG_POSIX_FSYNC is not set
+> # CONFIG_POSIX_SYNCHRONIZED_IO is not set
+> # end of POSIX synchronized I/O
+> 
+> # CONFIG_POSIX_TIMERS is not set
+> 
+> #
+> # X/Open system interfaces
+> #
+> # CONFIG_XSI_REALTIME is not set
+> # CONFIG_XSI_SINGLE_PROCESS is not set
+> # CONFIG_XSI_SINGLE_PROCESS_LOG_LEVEL_OFF is not set
+> # CONFIG_XSI_SINGLE_PROCESS_LOG_LEVEL_ERR is not set
+> # CONFIG_XSI_SINGLE_PROCESS_LOG_LEVEL_WRN is not set
+> # CONFIG_XSI_SINGLE_PROCESS_LOG_LEVEL_INF is not set
+> # CONFIG_XSI_SINGLE_PROCESS_LOG_LEVEL_DBG is not set
+> CONFIG_XSI_SINGLE_PROCESS_LOG_LEVEL_DEFAULT=y
+> CONFIG_XSI_SINGLE_PROCESS_LOG_LEVEL=0
+> # CONFIG_XOPEN_STREAMS is not set
+> # CONFIG_XSI_SYSTEM_LOGGING is not set
+> # CONFIG_XSI_THREADS_EXT is not set
+> # end of X/Open system interfaces
+> 
+> #
+> # Miscellaneous POSIX-related options
+> #
+> # CONFIG_EVENTFD is not set
+> # end of Miscellaneous POSIX-related options
+> 
+> CONFIG_TC_PROVIDES_POSIX_C_LANG_SUPPORT_R=y
+1912d2017
+< # CONFIG_WINSTREAM is not set
+1913a2019
+> # CONFIG_COBS is not set
+1914a2021,2028
+> 
+> #
+> # Universally Unique Identifier (UUID)
+> #
+> # CONFIG_UUID is not set
+> # end of Universally Unique Identifier (UUID)
+> 
+> # CONFIG_MIN_HEAP is not set
+1928a2043,2052
+> # CONFIG_CPU_LOAD_METRIC is not set
+> # CONFIG_CPU_LOAD_LOG_LEVEL_OFF is not set
+> # CONFIG_CPU_LOAD_LOG_LEVEL_ERR is not set
+> # CONFIG_CPU_LOAD_LOG_LEVEL_WRN is not set
+> # CONFIG_CPU_LOAD_LOG_LEVEL_INF is not set
+> # CONFIG_CPU_LOAD_LOG_LEVEL_DBG is not set
+> CONFIG_CPU_LOAD_LOG_LEVEL_DEFAULT=y
+> CONFIG_CPU_LOAD_LOG_LEVEL=0
+> # CONFIG_CRC is not set
+> # CONFIG_DAP is not set
+1939a2064
+> # CONFIG_UBSAN is not set
+1943d2067
+< # CONFIG_ASSERT is not set
+1951d2074
+< # CONFIG_DEBUG_INFO is not set
+1953a2077
+> # CONFIG_SYMTAB is not set
+1956a2081,2083
+> # CONFIG_CS_TRACE_DEFMT is not set
+> # CONFIG_CPU_LOAD is not set
+> CONFIG_CPU_LOAD_LOG_PERIODICALLY=0
+1964a2092
+> # CONFIG_FILE_SYSTEM_LIB_LINK is not set
+1967d2094
+< # CONFIG_NVS is not set
+1969a2097,2098
+> # CONFIG_GNSS_RTK is not set
+> 
+1978a2108
+> # CONFIG_LLEXT_EDK is not set
+1981,1987d2110
+< # Linkable loadable Extension Development Kit (EDK)
+< #
+< CONFIG_LLEXT_EDK_NAME="llext-edk"
+< # CONFIG_LLEXT_EDK_USERSPACE_ONLY is not set
+< # end of Linkable loadable Extension Development Kit (EDK)
+< 
+< #
+2020d2142
+< # CONFIG_LOG_USE_TAGGED_ARGUMENTS is not set
+2022a2145,2146
+> CONFIG_LOG_RATELIMIT=y
+> CONFIG_LOG_RATELIMIT_INTERVAL_MS=5000
+2048d2171
+< # CONFIG_NET_BUF is not set
+2054a2178
+> # CONFIG_PM_POLICY_LATENCY_STANDALONE is not set
+2057a2182,2187
+> # Platform Management Communications Infrastructure (PMCI)
+> #
+> # CONFIG_MCTP is not set
+> # end of Platform Management Communications Infrastructure (PMCI)
+> 
+> #
+2061a2192,2193
+> # CONFIG_PROFILING is not set
+> 
+2066a2199
+> CONFIG_CSPRNG_AVAILABLE=y
+2078a2212
+> # CONFIG_SECURE_STORAGE is not set
+2101d2234
+< CONFIG_COVERAGE_GCOV_HEAP_SIZE=16384
+2115c2248
+< CONFIG_TOOLCHAIN_ZEPHYR_0_16=y
+---
+> CONFIG_TOOLCHAIN_ZEPHYR_0_17=y
+2116a2250
+> CONFIG_TOOLCHAIN_ZEPHYR_SUPPORTS_GNU_EXTENSIONS=y
+2163c2297
+< CONFIG_COMPILER_FREESTANDING=y
+---
+> # CONFIG_COMPILER_FREESTANDING is not set
+2164a2299
+> # CONFIG_SIZE_OPTIMIZATIONS_AGGRESSIVE is not set
+2168a2304
+> # CONFIG_DEPRECATION_TEST is not set
+2172,2173c2308,2309
+< CONFIG_FORTIFY_SOURCE_NONE=y
+< # CONFIG_FORTIFY_SOURCE_COMPILE_TIME is not set
+---
+> # CONFIG_FORTIFY_SOURCE_NONE is not set
+> CONFIG_FORTIFY_SOURCE_COMPILE_TIME=y
+2176a2313
+> CONFIG_TOOLCHAIN_SUPPORTS_VLA_IN_STATEMENTS=y
+2189d2325
+< # CONFIG_OUTPUT_DISASSEMBLY is not set
+2191a2328
+> CONFIG_BUILD_GAP_FILL_PATTERN=0xFF
+2192a2330
+> # CONFIG_BUILD_OUTPUT_HEX_GAP_FILL is not set
+2194c2332
+< # CONFIG_BUILD_OUTPUT_S19 is not set
+---
+> # CONFIG_BUILD_OUTPUT_S19_GAP_FILL is not set
+2195a2334
+> # CONFIG_BUILD_OUTPUT_MOT is not set
+2201,2202c2340
+< CONFIG_BUILD_OUTPUT_META=y
+< # CONFIG_BUILD_OUTPUT_META_STATE_PROPAGATE is not set
+---
+> # CONFIG_BUILD_OUTPUT_META is not set
+2217a2356,2361
+> 
+> #
+> # Compatibility
+> #
+> CONFIG_LEGACY_GENERATED_INCLUDE_PATH=y
+> # end of Compatibility

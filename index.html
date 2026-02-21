@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NCS Migration Analysis: v61 (2.7.0) → v64 (3.2.2)</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #0d1117; color: #c9d1d9; font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace; font-size: 13px; line-height: 1.6; padding: 40px 20px; max-width: 900px; margin: 0 auto; }
+
+h1 { color: #f0f6fc; font-size: 24px; margin-bottom: 4px; }
+.subtitle { color: #8b949e; font-size: 13px; margin-bottom: 8px; }
+.context { color: #6e7681; font-size: 12px; margin-bottom: 32px; }
+.context span { color: #8b949e; }
+
+h2 { color: #79c0ff; font-size: 16px; margin: 32px 0 14px 0; border-bottom: 1px solid #21262d; padding-bottom: 6px; }
+h3 { color: #8b949e; font-size: 13px; font-weight: normal; margin: 24px 0 10px 0; text-transform: uppercase; letter-spacing: 0.5px; }
+
+/* Report cards */
+.cards { display: flex; flex-direction: column; gap: 12px; }
+a.card { display: block; background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 18px 20px; text-decoration: none; color: inherit; transition: border-color 0.15s, background 0.15s; }
+a.card:hover { border-color: #58a6ff; background: #1c2128; }
+.card-title { color: #f0f6fc; font-size: 15px; font-weight: bold; margin-bottom: 4px; }
+.card-desc { color: #8b949e; font-size: 12px; margin-bottom: 10px; }
+.card-stats { display: flex; gap: 10px; flex-wrap: wrap; }
+.stat { padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: bold; }
+.stat.critical { background: #f8514918; color: #f85149; }
+.stat.high { background: #d2992218; color: #d29922; }
+.stat.medium { background: #58a6ff18; color: #58a6ff; }
+.stat.low { background: #3fb95018; color: #3fb950; }
+.stat.diff { background: #8b949e18; color: #8b949e; }
+
+/* Secondary links */
+.secondary { display: flex; flex-wrap: wrap; gap: 8px; }
+a.sec-link { display: inline-block; padding: 5px 12px; border: 1px solid #30363d; border-radius: 6px; color: #8b949e; text-decoration: none; font-size: 12px; transition: border-color 0.15s, color 0.15s; }
+a.sec-link:hover { border-color: #58a6ff; color: #58a6ff; }
+
+footer { margin-top: 48px; padding-top: 16px; border-top: 1px solid #21262d; color: #484f58; font-size: 11px; }
+</style>
+</head>
+<body>
+
+<h1>NCS Migration Config Analysis</h1>
+<p class="subtitle">v61 (NCS 2.7.0) &rarr; v64 (NCS 3.2.2)</p>
+<p class="context">
+  <span>Board:</span> custom_board (nRF52840) &nbsp;&middot;&nbsp;
+  <span>MCUboot:</span> 48KB partition, ECDSA-P256 &nbsp;&middot;&nbsp;
+  <span>Swap:</span> SWAP_USING_MOVE
+</p>
+
+<h2>Deep Analysis Reports (v2)</h2>
+<p class="card-desc">Every config cross-referenced against Kconfig source in both SDK versions for select&rarr;depends, default, and imply changes.</p>
+<div class="cards">
+
+  <a class="card" href="application_analysis_v2.html">
+    <div class="card-title">Application Config Analysis</div>
+    <div class="card-desc">BLE, crypto, storage, kernel, MCUmgr, Memfault, power management &mdash; 69 findings</div>
+    <div class="card-stats">
+      <span class="stat critical">13 CRITICAL</span>
+      <span class="stat high">16 HIGH</span>
+      <span class="stat medium">20 MEDIUM</span>
+      <span class="stat low">20 LOW</span>
+    </div>
+  </a>
+
+  <a class="card" href="mcuboot_analysis_v2.html">
+    <div class="card-title">MCUboot Config Analysis</div>
+    <div class="card-desc">Swap algorithm, C library migration, CC310 crypto, system/kernel/hardware &mdash; 27 findings</div>
+    <div class="card-stats">
+      <span class="stat critical">4 CRITICAL</span>
+      <span class="stat high">5 HIGH</span>
+      <span class="stat medium">8 MEDIUM</span>
+      <span class="stat low">10 LOW</span>
+    </div>
+  </a>
+
+  <a class="card" href="diff_report.html">
+    <div class="card-title">Config Diff &mdash; Risk Annotated</div>
+    <div class="card-desc">Complete diff of all 2,078 configs with risk badges, analysis notes, and filtering &mdash; application + MCUboot</div>
+    <div class="card-stats">
+      <span class="stat critical">14 CRITICAL</span>
+      <span class="stat high">21 HIGH</span>
+      <span class="stat medium">24 MEDIUM</span>
+      <span class="stat low">32 LOW</span>
+      <span class="stat diff">2,078 total configs</span>
+    </div>
+  </a>
+
+</div>
+
+<h3>First-pass reports (v1)</h3>
+<div class="secondary">
+  <a class="sec-link" href="application_analysis.html">Application Analysis v1</a>
+  <a class="sec-link" href="mcuboot_analysis.html">MCUboot Analysis v1</a>
+</div>
+
+<h3>Raw configs &amp; diffs</h3>
+<div class="secondary">
+  <a class="sec-link" href="application_v61_ncs270.config">app v61 .config</a>
+  <a class="sec-link" href="application_v64_ncs322.config">app v64 .config</a>
+  <a class="sec-link" href="mcuboot_v61_ncs270.config">mcuboot v61 .config</a>
+  <a class="sec-link" href="mcuboot_v64_ncs322.config">mcuboot v64 .config</a>
+  <a class="sec-link" href="sysbuild_v64_ncs322.config">sysbuild v64 .config</a>
+  <a class="sec-link" href="diff_application.txt">diff (application)</a>
+  <a class="sec-link" href="diff_mcuboot.txt">diff (mcuboot)</a>
+  <a class="sec-link" href="diff_summary.txt">diff summary</a>
+</div>
+
+<footer>
+  Generated 2026-02-22 &middot; custom_board &middot; NCS 2.7.0 &rarr; 3.2.2
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Application Config Deep Analysis v2: NCS 2.7.0 → 3.2.2</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #0d1117; color: #c9d1d9; font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace; font-size: 13px; line-height: 1.6; padding: 20px; }
+h1 { color: #58a6ff; font-size: 22px; margin-bottom: 8px; }
+h2 { color: #79c0ff; font-size: 17px; margin: 24px 0 12px 0; border-bottom: 1px solid #21262d; padding-bottom: 6px; }
+h3 { color: #d2a8ff; font-size: 14px; margin: 16px 0 6px 0; }
+.subtitle { color: #8b949e; font-size: 13px; margin-bottom: 20px; }
+.exec-summary { background: #161b22; border: 1px solid #30363d; border-radius: 6px; padding: 16px; margin-bottom: 20px; }
+.exec-summary h2 { margin-top: 0; border: none; }
+.stat-row { display: flex; gap: 12px; margin: 12px 0; flex-wrap: wrap; }
+.stat-box { background: #0d1117; border: 1px solid #30363d; border-radius: 6px; padding: 10px 16px; text-align: center; min-width: 100px; }
+.stat-box .num { font-size: 24px; font-weight: bold; }
+.stat-box .label { font-size: 11px; color: #8b949e; }
+.stat-box.critical .num { color: #f85149; }
+.stat-box.high .num { color: #d29922; }
+.stat-box.medium .num { color: #58a6ff; }
+.stat-box.low .num { color: #3fb950; }
+.stat-box.none .num { color: #8b949e; }
+
+.search-box { width: 100%; padding: 10px 14px; background: #0d1117; border: 1px solid #30363d; border-radius: 6px; color: #c9d1d9; font-family: inherit; font-size: 13px; margin-bottom: 16px; }
+.search-box:focus { outline: none; border-color: #58a6ff; }
+
+.section { margin-bottom: 20px; }
+.section-header { background: #161b22; border: 1px solid #30363d; border-radius: 6px 6px 0 0; padding: 10px 14px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none; }
+.section-header:hover { background: #1c2128; }
+.section-header .arrow { transition: transform 0.2s; }
+.section-header.collapsed .arrow { transform: rotate(-90deg); }
+.section-body { border: 1px solid #30363d; border-top: none; border-radius: 0 0 6px 6px; }
+.section-body.hidden { display: none; }
+
+.config-entry { padding: 12px 14px; border-bottom: 1px solid #21262d; }
+.config-entry:last-child { border-bottom: none; }
+.config-entry:hover { background: #161b22; }
+.config-name { font-weight: bold; color: #f0f6fc; font-size: 13px; }
+.config-values { margin: 4px 0; }
+.val-old { color: #f85149; }
+.val-new { color: #3fb950; }
+.val-arrow { color: #8b949e; margin: 0 6px; }
+.config-desc { color: #8b949e; margin-top: 4px; font-size: 12px; }
+.config-source { color: #6e7681; font-size: 11px; margin-top: 2px; }
+.config-why { color: #c9d1d9; margin-top: 4px; font-size: 12px; }
+
+.badge { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 10px; font-weight: bold; text-transform: uppercase; margin-left: 8px; vertical-align: middle; }
+.badge.critical { background: #f8514922; color: #f85149; border: 1px solid #f8514944; }
+.badge.high { background: #d2992222; color: #d29922; border: 1px solid #d2992244; }
+.badge.medium { background: #58a6ff22; color: #58a6ff; border: 1px solid #58a6ff44; }
+.badge.low { background: #3fb95022; color: #3fb950; border: 1px solid #3fb95044; }
+.badge.none { background: #8b949e22; color: #8b949e; border: 1px solid #8b949e44; }
+
+.tag { display: inline-block; padding: 0 6px; border-radius: 4px; font-size: 10px; margin-right: 4px; background: #21262d; color: #8b949e; }
+.tag.bt { background: #1f3d5c; color: #58a6ff; }
+.tag.crypto { background: #3d1f5c; color: #d2a8ff; }
+.tag.mcuboot { background: #5c3d1f; color: #d29922; }
+.tag.kernel { background: #1f5c3d; color: #3fb950; }
+.tag.hw { background: #5c1f3d; color: #f778ba; }
+.tag.build { background: #2d2d2d; color: #c9d1d9; }
+.tag.memfault { background: #3d5c1f; color: #7ee787; }
+.tag.pm { background: #1f5c5c; color: #56d4dd; }
+.tag.storage { background: #5c5c1f; color: #e3b341; }
+.tag.rca { background: #f8514933; color: #f85149; border: 1px solid #f8514955; }
+.tag.sdk-default { background: #d2992233; color: #d29922; border: 1px solid #d2992255; }
+.tag.select-depends { background: #f8514933; color: #ff7b72; border: 1px solid #f8514955; }
+
+.action-items { background: #1c0e0e; border: 1px solid #f8514944; border-radius: 6px; padding: 16px; margin: 16px 0; }
+.action-items h3 { color: #f85149; margin-bottom: 8px; }
+.action-item { padding: 6px 0; border-bottom: 1px solid #21262d; }
+.action-item:last-child { border-bottom: none; }
+
+.noise-summary { background: #161b22; border: 1px solid #30363d; border-radius: 6px; padding: 16px; margin: 16px 0; }
+.noise-cat { margin: 8px 0; padding: 6px 0; border-bottom: 1px solid #21262d; }
+.noise-cat:last-child { border-bottom: none; }
+.noise-count { color: #58a6ff; font-weight: bold; }
+
+.filter-bar { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+.filter-btn { padding: 4px 10px; border-radius: 14px; border: 1px solid #30363d; background: #0d1117; color: #8b949e; cursor: pointer; font-size: 11px; font-family: inherit; }
+.filter-btn:hover { border-color: #58a6ff; color: #58a6ff; }
+.filter-btn.active { background: #58a6ff22; border-color: #58a6ff; color: #58a6ff; }
+
+.v2-note { background: #1c1c0e; border: 1px solid #d2992244; border-radius: 6px; padding: 12px 16px; margin-bottom: 20px; color: #d29922; font-size: 12px; }
+</style>
+</head>
+<body>
+
+<h1>Application Config Deep Analysis v2</h1>
+<p class="subtitle">NCS 2.7.0 (v61) &rarr; NCS 3.2.2 (v64) &mdash; custom_board (nRF52840) &mdash; Generated 2026-02-22</p>
+
+<div class="v2-note">
+<strong>v2 Second-Pass Analysis:</strong> Every config checked against Kconfig source in BOTH SDK versions. All <code>select &harr; depends on</code>, <code>default</code>, and <code>imply</code> changes flagged. Items upgraded from v1 marked with <span class="tag sdk-default">SDK DEFAULT</span> or <span class="tag select-depends">SELECT&rarr;DEPENDS</span> tags. 13 CRITICAL (was 7), 16 HIGH (was 14).
+</div>
+
+<div class="exec-summary">
+<h2>Executive Summary</h2>
+<div class="stat-row">
+<div class="stat-box"><div class="num">58</div><div class="label">CHANGED</div></div>
+<div class="stat-box"><div class="num">452</div><div class="label">ADDED</div></div>
+<div class="stat-box"><div class="num">959</div><div class="label">REMOVED</div></div>
+<div class="stat-box critical"><div class="num">13</div><div class="label">CRITICAL</div></div>
+<div class="stat-box high"><div class="num">16</div><div class="label">HIGH</div></div>
+<div class="stat-box medium"><div class="num">20</div><div class="label">MEDIUM</div></div>
+<div class="stat-box low"><div class="num">20</div><div class="label">LOW</div></div>
+</div>
+<p style="margin-top:12px;color:#c9d1d9;">
+<strong>Systemic pattern found:</strong> NCS 3.2.2 changed ~15 Kconfig symbols from <code>select</code> to <code>depends on</code>. This silently disables features that were previously force-enabled. The ATT handle restructure (production RCA) is one instance of this class. <strong>NVS FLASH_PAGE_LAYOUT is another instance of the same class &mdash; verify it hasn't silently broken.</strong>
+</p>
+<p style="margin-top:8px;color:#c9d1d9;">
+Key changes: <strong>TinyCrypt &rarr; PSA Crypto</strong>, <strong>BLE security hardening</strong> (SC-only default, 16-byte keys), <strong>SMP GATT static registration</strong> (ATT handle shift &mdash; production RCA), <strong>BT_BUF_ACL_RX_COUNT formula change</strong> (6&rarr;2-3 buffers), <strong>MCUMGR auth config silently ignored</strong>, <strong>Scheduler default 0&rarr;20ms timeslice</strong>, <strong>DC/DC &rarr; devicetree</strong>, <strong>NVS select&rarr;depends on FLASH_PAGE_LAYOUT</strong>.
+</p>
+</div>
+
+<div class="action-items">
+<h3>Action Items (Must Verify) &mdash; 13 Critical + 5 High Priority</h3>
+
+<div class="action-item"><span class="badge critical">CRITICAL</span> <span class="tag rca">PRODUCTION RCA</span> <strong>ATT Handle Restructure</strong>: MCUMGR_TRANSPORT_BT_DYNAMIC_SVC_REGISTRATION removed + BT_GATT_DYNAMIC_DB y&rarr;n. Kconfig changed from <code>select</code> to <code>depends on</code> in NCS 3.2.2. SMP service switched from dynamic to static GATT registration, shifting ALL ATT handles. Bonded peers break.</div>
+
+<div class="action-item"><span class="badge critical">CRITICAL</span> <span class="tag select-depends">SELECT&rarr;DEPENDS</span> <strong>NVS FLASH_PAGE_LAYOUT</strong>: NVS Kconfig changed from <code>select FLASH_PAGE_LAYOUT</code> to <code>depends on FLASH_PAGE_LAYOUT</code>. Same class of silent failure as ATT handle bug. If FLASH_PAGE_LAYOUT not explicitly enabled, NVS may silently fail to initialize. Verify NVS is working in v64.</div>
+
+<div class="action-item"><span class="badge critical">CRITICAL</span> <span class="tag sdk-default">SDK DEFAULT</span> <strong>BT_SMP_SC_PAIR_ONLY</strong>: SDK default changed n&rarr;y unconditionally. Legacy BLE pairing (4.0/4.1 without SC) is completely disabled. Any peer without Secure Connections support cannot pair.</div>
+
+<div class="action-item"><span class="badge critical">CRITICAL</span> <span class="tag sdk-default">SDK DEFAULT</span> <strong>BT_SMP_MIN_ENC_KEY_SIZE</strong>: SDK default changed 7&rarr;16 unconditionally. Peers negotiating &lt;16-byte encryption keys are rejected. KNOB attack prevention but may break old devices.</div>
+
+<div class="action-item"><span class="badge critical">CRITICAL</span> <span class="tag sdk-default">SDK DEFAULT</span> <strong>TIMESLICE_SIZE 0&rarr;20</strong>: SDK default changed from 0 (cooperative) to 20ms (preemptive). Equal-priority threads now preempted every 20ms. May expose latent race conditions in code that assumed cooperative scheduling.</div>
+
+<div class="action-item"><span class="badge critical">CRITICAL</span> <strong>BT_BUF_ACL_RX_COUNT removed</strong>: Was explicitly set to 6. Config removed in v64, replaced by internal formula that yields 2-3 buffers. 50% fewer ACL RX buffers may cause packet drops under load (DFU, notifications).</div>
+
+<div class="action-item"><span class="badge critical">CRITICAL</span> <strong>MCUMGR_TRANSPORT_BT_AUTHEN removed</strong>: Old <code>MCUMGR_TRANSPORT_BT_AUTHEN=n</code> in prj.conf is silently ignored in NCS 3.2.2 (replaced by choice: PERM_RW / PERM_RW_ENCRYPT / PERM_RW_AUTHEN). Verify the new PERM_RW=y is intentional &mdash; it means unauthenticated DFU.</div>
+
+<div class="action-item"><span class="badge critical">CRITICAL</span> <strong>MCUMGR_TRANSPORT_BT_PERM_RW=y</strong>: Unauthenticated BLE DFU. Anyone in range can initiate firmware update without pairing. Review security implications.</div>
+
+<div class="action-item"><span class="badge critical">CRITICAL</span> <strong>DC/DC Regulator removed</strong>: BOARD_ENABLE_DCDC/DCDC_HV removed. SOC_DCDC_NRF52X now selects DEPRECATED. Must have <code>regulator-initial-mode = &lt;NRF5X_REG_MODE_DCDC&gt;</code> in board DTS. Without it &rarr; 2-3x higher current.</div>
+
+<div class="action-item"><span class="badge critical">CRITICAL</span> <strong>MCUboot Mode Rename</strong>: SWAP_WITHOUT_SCRATCH &rarr; SWAP_USING_MOVE. Update any <code>#ifdef</code> referencing old symbol. If neither set &rarr; OTA fails silently.</div>
+
+<div class="action-item"><span class="badge critical">CRITICAL</span> <span class="tag select-depends">SELECT&rarr;DEPENDS</span> <strong>9 BT Audio profiles lost BT_GATT_DYNAMIC_DB</strong>: BT_BAP, BT_CAP, BT_CSIP, BT_HAS, BT_MCS, BT_MICP, BT_OTS, BT_TBS, BT_VCP all changed from <code>select BT_GATT_DYNAMIC_DB</code> to <code>depends on</code>. Systemic pattern. Not directly used by this app but confirms the SDK-wide change.</div>
+
+<div class="action-item"><span class="badge critical">CRITICAL</span> <strong>BT_CTLR removed</strong>: <code>CONFIG_BT_CTLR=y</code> replaced by hidden <code>HAS_BT_CTLR</code> selected by BT_LL_SOFTDEVICE. Old prj.conf <code>CONFIG_BT_CTLR=y</code> is silently ignored. Verify BT_LL_SOFTDEVICE=y is set.</div>
+
+<div class="action-item"><span class="badge critical">CRITICAL</span> <strong>BT_ECC / BT_TINYCRYPT_ECC rewrite</strong>: Entire BLE ECC subsystem rewritten from TinyCrypt to PSA Crypto. BT_TINYCRYPT_ECC removed entirely. ECDH moved from controller thread (900B stack) to host via PSA/Oberon. Different code paths, different stack usage, different timing.</div>
+
+<div class="action-item"><span class="badge high">HIGH</span> <strong>ROM_END_OFFSET 0&rarr;0x2096</strong>: Not page-aligned. Must exactly match MCUboot trailer for swap-using-move.</div>
+
+<div class="action-item"><span class="badge high">HIGH</span> <strong>ARM_MPU_REGION_MIN_ALIGN_AND_SIZE 32&rarr;128</strong>: New conditional default 128 when FPU_SHARING + MPU_STACK_GUARD. Wastes RAM via padding. Review thread stack sizes.</div>
+
+<div class="action-item"><span class="badge high">HIGH</span> <strong>COMMON_LIBC_MALLOC_ARENA_SIZE=-1</strong>: malloc() gets ALL remaining SRAM. Accidental malloc() calls silently succeed. Set explicit limit.</div>
+
+<div class="action-item"><span class="badge high">HIGH</span> <span class="tag sdk-default">SDK DEFAULT</span> <strong>MCUMGR_GRP_IMG_ALLOW_CONFIRM_NON_ACTIVE_SLOT</strong>: New default y. Allows confirming images in non-active slot via SMP. Security implication: attacker with BLE access can confirm a malicious image.</div>
+
+<div class="action-item"><span class="badge high">HIGH</span> <strong>BT_GATT_CACHING crypto backend change</strong>: GATT caching hash computation moved from TinyCrypt AES to PSA Crypto. Different select chain. Verify caching works correctly after migration.</div>
+</div>
+
+<input type="text" class="search-box" id="searchBox" placeholder="Search configs... (e.g., BT_SMP, PSA_CRYPTO, MCUBOOT, select, depends)" oninput="filterConfigs()">
+
+<div class="filter-bar">
+<button class="filter-btn active" onclick="filterByRisk('all', this)">All</button>
+<button class="filter-btn" onclick="filterByRisk('critical', this)">Critical</button>
+<button class="filter-btn" onclick="filterByRisk('high', this)">High</button>
+<button class="filter-btn" onclick="filterByRisk('medium', this)">Medium</button>
+<button class="filter-btn" onclick="filterByRisk('low', this)">Low</button>
+<button class="filter-btn" onclick="filterByRisk('none', this)">None</button>
+</div>
+
+<!-- ==================== SECTION 1: CHANGED CONFIGS ==================== -->
+<div class="section" id="sec-changed">
+<div class="section-header" onclick="toggleSection(this)">
+<span><span class="arrow">&#9660;</span> Section 1: Changed Configs (58)</span>
+<span style="color:#8b949e">8 CRITICAL, 5 HIGH, 5 MEDIUM</span>
+</div>
+<div class="section-body">
+
+<h3 style="padding:12px 14px 0 14px;">BLE Stack &mdash; Security (CRITICAL)</h3>
+
+<div class="config-entry" data-risk="critical" data-text="CONFIG_BT_GATT_DYNAMIC_DB bt gatt service register att handle restructure production rca select depends">
+<span class="config-name">CONFIG_BT_GATT_DYNAMIC_DB</span> <span class="badge critical">CRITICAL</span> <span class="tag bt">BT</span> <span class="tag rca">PRODUCTION RCA</span> <span class="tag select-depends">SELECT&rarr;DEPENDS</span>
+<div class="config-values"><span class="val-old">y</span><span class="val-arrow">&rarr;</span><span class="val-new">n</span></div>
+<div class="config-desc"><strong>Root cause of ATT handle restructure bug reported in production.</strong> In v61, <code>MCUMGR_TRANSPORT_BT_DYNAMIC_SVC_REGISTRATION=y</code> force-selected <code>BT_GATT_DYNAMIC_DB=y</code> via Kconfig <code>select</code>. The SMP DFU service was registered at runtime via <code>bt_gatt_service_register()</code>, placing ATT handles at the end. In NCS 3.2.2, the Kconfig changed from <code>select BT_GATT_DYNAMIC_DB</code> to <code>depends on BT_GATT_DYNAMIC_DB</code>. Since nobody explicitly enabled DYNAMIC_DB, SMP switched to static <code>BT_GATT_SERVICE_DEFINE()</code>. Static services are interleaved by linker section ordering, <strong>shifting ALL ATT handles</strong>.</div>
+<div class="config-source">Kconfig: <code>zephyr/subsys/mgmt/mcumgr/transport/Kconfig.bluetooth:94</code> (v2.7.0: <code>select BT_GATT_DYNAMIC_DB</code>) &rarr; <code>:106</code> (v3.2.2: <code>depends on BT_GATT_DYNAMIC_DB</code>). Impl: <code>smp_bt.c:376-381</code> &mdash; <code>#ifdef</code> dynamic vs static.</div>
+<div class="config-why"><strong>Fix:</strong> (1) Re-enable <code>BT_GATT_DYNAMIC_DB=y</code> + <code>MCUMGR_TRANSPORT_BT_DYNAMIC_SVC_REGISTRATION=y</code>. (2) Keep static but ensure <code>BT_GATT_SERVICE_CHANGED=y</code> + <code>BT_GATT_CACHING=y</code>. (3) Force bond clearing on FW upgrade.</div>
+</div>
+
+<div class="config-entry" data-risk="critical" data-text="CONFIG_BT_SMP_SC_PAIR_ONLY bt security secure connections legacy pairing sdk default">
+<span class="config-name">CONFIG_BT_SMP_SC_PAIR_ONLY</span> <span class="badge critical">CRITICAL</span> <span class="tag bt">BT</span> <span class="tag crypto">SECURITY</span> <span class="tag sdk-default">SDK DEFAULT n&rarr;y</span>
+<div class="config-values"><span class="val-old">n</span><span class="val-arrow">&rarr;</span><span class="val-new">y</span></div>
+<div class="config-desc">Forces LE Secure Connections pairing only. Legacy pairing (BLE 4.0/4.1 without SC) is <strong>completely disabled</strong>. SDK default changed unconditionally from n to y in NCS 3.2.2.</div>
+<div class="config-source">Kconfig: <code>zephyr/subsys/bluetooth/host/Kconfig:186</code> (v2.7.0: <code>default n</code>) &rarr; <code>:198</code> (v3.2.2: <code>default y</code>). Unconditional change.</div>
+<div class="config-why"><strong>Impact:</strong> iOS 9+ / Android 6+ support SC. Diagnostic tools using legacy pairing will break. Factory test equipment may need updating.</div>
+</div>
+
+<div class="config-entry" data-risk="critical" data-text="CONFIG_BT_SMP_MIN_ENC_KEY_SIZE bt security encryption knob pairing sdk default">
+<span class="config-name">CONFIG_BT_SMP_MIN_ENC_KEY_SIZE</span> <span class="badge critical">CRITICAL</span> <span class="tag bt">BT</span> <span class="tag crypto">SECURITY</span> <span class="tag sdk-default">SDK DEFAULT 7&rarr;16</span>
+<div class="config-values"><span class="val-old">7</span><span class="val-arrow">&rarr;</span><span class="val-new">16</span></div>
+<div class="config-desc">Minimum encryption key size (octets). SDK default changed unconditionally from 7 to 16. Prevents KNOB attacks. Devices negotiating &lt;16-byte keys are <strong>rejected</strong>.</div>
+<div class="config-source">Kconfig: <code>zephyr/subsys/bluetooth/host/Kconfig:167</code> (v2.7.0: <code>default 7</code>) &rarr; <code>:179</code> (v3.2.2: <code>default 16</code>). Range 7..16 in both.</div>
+<div class="config-why"><strong>Impact:</strong> All modern phones support 16-byte keys. Very old BLE peripherals or test equipment may fail. Security hardening &mdash; good change, but test all pairing partners.</div>
+</div>
+
+<div class="config-entry" data-risk="critical" data-text="CONFIG_TIMESLICE_SIZE scheduler preemption threading sdk default cooperative">
+<span class="config-name">CONFIG_TIMESLICE_SIZE</span> <span class="badge critical">CRITICAL</span> <span class="tag kernel">KERNEL</span> <span class="tag sdk-default">SDK DEFAULT 0&rarr;20</span>
+<div class="config-values"><span class="val-old">0</span><span class="val-arrow">&rarr;</span><span class="val-new">20</span></div>
+<div class="config-desc"><strong>Major behavioral change.</strong> Equal-priority threads now preempted every 20ms. SDK default changed from 0 (pure cooperative among equal-priority threads) to 20ms (preemptive timeslicing).</div>
+<div class="config-source">Kconfig: <code>zephyr/kernel/Kconfig:487</code> (v2.7.0: <code>default 0</code>) &rarr; <code>:501</code> (v3.2.2: <code>default 20</code>).</div>
+<div class="config-why"><strong>Impact:</strong> May expose latent race conditions in code that assumed equal-priority threads wouldn't preempt each other. Test timing-sensitive operations, shared state without mutexes, sensor sampling loops.</div>
+</div>
+
+<div class="config-entry" data-risk="critical" data-text="CONFIG_MCUBOOT_BOOTLOADER_MODE_SWAP_WITHOUT_SCRATCH mcuboot swap move dfu ota deprecated">
+<span class="config-name">CONFIG_MCUBOOT_BOOTLOADER_MODE_SWAP_WITHOUT_SCRATCH</span> <span class="badge critical">CRITICAL</span> <span class="tag mcuboot">MCUBOOT</span>
+<div class="config-values"><span class="val-old">y</span><span class="val-arrow">&rarr;</span><span class="val-new">n</span></div>
+<div class="config-desc"><strong>DEPRECATED rename.</strong> Replaced by MCUBOOT_BOOTLOADER_MODE_SWAP_USING_MOVE=y. Same swap algorithm, new Kconfig name.</div>
+<div class="config-source">Kconfig: <code>nrf/subsys/bootloader/Kconfig</code> (v2.7.0) &rarr; <code>zephyr/modules/mcuboot/Kconfig</code> (v3.2.2). Old symbol removed.</div>
+<div class="config-why"><strong>Action:</strong> Verify SWAP_USING_MOVE=y is set. Update any <code>#ifdef</code> referencing old symbol. If neither is set &rarr; OTA fails silently.</div>
+</div>
+
+<h3 style="padding:12px 14px 0 14px;">BLE Stack &mdash; Buffers &amp; Transport</h3>
+
+<div class="config-entry" data-risk="high" data-text="CONFIG_BT_CONN_TX_USER_DATA_SIZE bt connection internal sdk default architecture">
+<span class="config-name">CONFIG_BT_CONN_TX_USER_DATA_SIZE</span> <span class="badge high">HIGH</span> <span class="tag bt">BT</span> <span class="tag sdk-default">SDK DEFAULT 8&rarr;16</span>
+<div class="config-values"><span class="val-old">8</span><span class="val-arrow">&rarr;</span><span class="val-new">16</span></div>
+<div class="config-desc">Internal user_data size for TX metadata. SDK refactored TX handling: <code>struct tx_meta</code> &rarr; <code>struct closure</code> needs more space. Default changed 8&rarr;16 on 32-bit ARM.</div>
+<div class="config-source">Kconfig: <code>zephyr/subsys/bluetooth/host/Kconfig:89</code> (v2.7.0: <code>default 8</code>) &rarr; <code>:95</code> (v3.2.2: <code>default 16</code>). Architecture-dependent change.</div>
+<div class="config-why"><strong>Impact:</strong> 8 extra bytes per TX buffer. With 8 ACL TX buffers = 64B extra RAM. Wrong size causes struct corruption &mdash; must use SDK default.</div>
+</div>
+
+<div class="config-entry" data-risk="high" data-text="CONFIG_BT_BUF_ACL_RX_SIZE bt buffer acl rx throughput dfu">
+<span class="config-name">CONFIG_BT_BUF_ACL_RX_SIZE</span> <span class="badge high">HIGH</span> <span class="tag bt">BT</span>
+<div class="config-values"><span class="val-old">502</span><span class="val-arrow">&rarr;</span><span class="val-new">251</span></div>
+<div class="config-desc">Max ACL RX data size (Controller&rarr;Host). Halved from full BLE 5.x DLE max to 251 bytes. Correlates with L2CAP_TX_MTU 498&rarr;247.</div>
+<div class="config-why"><strong>Impact:</strong> Saves ~250 bytes RAM per buffer. Peers sending &gt;251-byte PDUs will be rejected. DFU throughput reduced ~50%.</div>
+</div>
+
+<div class="config-entry" data-risk="high" data-text="CONFIG_BT_L2CAP_TX_MTU bt l2cap mtu throughput dfu ota">
+<span class="config-name">CONFIG_BT_L2CAP_TX_MTU</span> <span class="badge high">HIGH</span> <span class="tag bt">BT</span>
+<div class="config-values"><span class="val-old">498</span><span class="val-arrow">&rarr;</span><span class="val-new">247</span></div>
+<div class="config-desc">Max L2CAP TX MTU. 247 = 251 (ACL) - 4 (L2CAP header). DFU over SMP/BLE uses smaller packets &rarr; ~50% throughput reduction.</div>
+<div class="config-why"><strong>Impact:</strong> Significant RAM savings but DFU time doubles. Verify OTA timeout settings are sufficient.</div>
+</div>
+
+<div class="config-entry" data-risk="medium" data-text="CONFIG_BT_BUF_ACL_TX_COUNT bt buffer acl tx throughput">
+<span class="config-name">CONFIG_BT_BUF_ACL_TX_COUNT</span> <span class="badge medium">MEDIUM</span> <span class="tag bt">BT</span>
+<div class="config-values"><span class="val-old">32</span><span class="val-arrow">&rarr;</span><span class="val-new">8</span></div>
+<div class="config-desc">Outgoing ACL data buffers. 32 was excessive for nRF52840. 8 still above default (3). Could reduce peak throughput for bulk BLE transfers.</div>
+</div>
+
+<div class="config-entry" data-risk="medium" data-text="CONFIG_BT_BUF_CMD_TX_COUNT bt hci command sdk default">
+<span class="config-name">CONFIG_BT_BUF_CMD_TX_COUNT</span> <span class="badge medium">MEDIUM</span> <span class="tag bt">BT</span> <span class="tag sdk-default">SDK DEFAULT 2&rarr;1</span>
+<div class="config-values"><span class="val-old">32</span><span class="val-arrow">&rarr;</span><span class="val-new">4</span></div>
+<div class="config-desc">HCI command TX buffers. App set 32&rarr;4. Also SDK default dropped from 2&rarr;1 and min changed 2&rarr;1. 4 is still generous.</div>
+<div class="config-source">Kconfig: <code>zephyr/subsys/bluetooth/host/Kconfig:45</code> (v2.7.0: <code>default 2, range 2..64</code>) &rarr; (v3.2.2: <code>default 1, range 1..64</code>).</div>
+</div>
+
+<div class="config-entry" data-risk="none" data-text="CONFIG_BT_BUF_EVT_RX_COUNT bt hci event">
+<span class="config-name">CONFIG_BT_BUF_EVT_RX_COUNT</span> <span class="badge none">NONE</span> <span class="tag bt">BT</span>
+<div class="config-values"><span class="val-old">10</span><span class="val-arrow">&rarr;</span><span class="val-new">9</span></div>
+<div class="config-desc">HCI event RX buffers. Both SDKs default to 10. Change is negligible, likely config resolution artifact.</div>
+</div>
+
+<div class="config-entry" data-risk="low" data-text="CONFIG_BT_ATT_PREPARE_COUNT bt gatt long write">
+<span class="config-name">CONFIG_BT_ATT_PREPARE_COUNT</span> <span class="badge low">LOW</span> <span class="tag bt">BT</span>
+<div class="config-values"><span class="val-old">0</span><span class="val-arrow">&rarr;</span><span class="val-new">2</span></div>
+<div class="config-desc">ATT prepare write buffers. Enables GATT long/reliable writes. Intentional app change. Small RAM cost.</div>
+</div>
+
+<div class="config-entry" data-risk="medium" data-text="CONFIG_BT_CTLR_PRIVACY bt controller privacy rpa host">
+<span class="config-name">CONFIG_BT_CTLR_PRIVACY</span> <span class="badge medium">MEDIUM</span> <span class="tag bt">BT</span>
+<div class="config-values"><span class="val-old">y</span><span class="val-arrow">&rarr;</span><span class="val-new">n</span></div>
+<div class="config-desc">Controller-based BLE privacy (RPA resolution) moved to host-side. Reduces SDC RAM. More CPU during scanning but fine for wearable that mostly advertises.</div>
+</div>
+
+<div class="config-entry" data-risk="low" data-text="CONFIG_BT_CTLR_SDC_TX_PACKET_COUNT bt sdc link layer tx">
+<span class="config-name">CONFIG_BT_CTLR_SDC_TX_PACKET_COUNT</span> <span class="badge low">LOW</span> <span class="tag bt">BT</span>
+<div class="config-values"><span class="val-old">3</span><span class="val-arrow">&rarr;</span><span class="val-new">8</span></div>
+<div class="config-desc">LL TX packets per connection. Now aligned with BT_BUF_ACL_TX_COUNT=8. Improves reliability during high CPU load.</div>
+</div>
+
+<div class="config-entry" data-risk="low" data-text="CONFIG_BT_LONG_WQ_STACK_SIZE bt workqueue ecc psa">
+<span class="config-name">CONFIG_BT_LONG_WQ_STACK_SIZE</span> <span class="badge low">LOW</span> <span class="tag bt">BT</span>
+<div class="config-values"><span class="val-old">1300</span><span class="val-arrow">&rarr;</span><span class="val-new">1800</span></div>
+<div class="config-desc">BT long workqueue stack. PSA crypto backend needs more stack than TinyCrypt. SDK default rose to 1400 for BT_ECC.</div>
+</div>
+
+<div class="config-entry" data-risk="low" data-text="CONFIG_BT_MAX_PAIRED bt bond storage">
+<span class="config-name">CONFIG_BT_MAX_PAIRED</span> <span class="badge low">LOW</span> <span class="tag bt">BT</span>
+<div class="config-values"><span class="val-old">20</span><span class="val-arrow">&rarr;</span><span class="val-new">8</span></div>
+<div class="config-desc">Max bonded devices. 8 is generous for wearable. Saves NVS storage.</div>
+</div>
+
+<h3 style="padding:12px 14px 0 14px;">Crypto / Security</h3>
+
+<div class="config-entry" data-risk="low" data-text="CONFIG_MBEDTLS_CIPHER_C mbedtls legacy cipher api psa">
+<span class="config-name">CONFIG_MBEDTLS_CIPHER_C</span> <span class="badge low">LOW</span> <span class="tag crypto">CRYPTO</span>
+<div class="config-values"><span class="val-old">y</span><span class="val-arrow">&rarr;</span><span class="val-new">n</span></div>
+<div class="config-desc">Legacy mbedTLS cipher API disabled. PSA Crypto is now primary. Verify no code calls mbedtls_cipher_* directly.</div>
+</div>
+
+<div class="config-entry" data-risk="low" data-text="CONFIG_MBEDTLS_ENABLE_HEAP mbedtls memory psa">
+<span class="config-name">CONFIG_MBEDTLS_ENABLE_HEAP</span> <span class="badge low">LOW</span> <span class="tag crypto">CRYPTO</span>
+<div class="config-values"><span class="val-old">n</span><span class="val-arrow">&rarr;</span><span class="val-new">y</span></div>
+<div class="config-desc">Global heap for mbedTLS/PSA. Required by PSA crypto. MBEDTLS_HEAP_SIZE=512 bytes. Monitor for allocation failures.</div>
+</div>
+
+<div class="config-entry" data-risk="low" data-text="CONFIG_MBEDTLS_MPI_MAX_SIZE mbedtls bignum rsa">
+<span class="config-name">CONFIG_MBEDTLS_MPI_MAX_SIZE</span> <span class="badge low">LOW</span> <span class="tag crypto">CRYPTO</span>
+<div class="config-values"><span class="val-old">256</span><span class="val-arrow">&rarr;</span><span class="val-new">384</span></div>
+<div class="config-desc">Max MPI size. v3.2.2 added default 384 to support RSA-3072. Minimal RAM impact.</div>
+</div>
+
+<div class="config-entry" data-risk="none" data-text="CONFIG_MBEDTLS_PSA_CRYPTO_CONFIG_FILE nrf-psa-crypto">
+<span class="config-name">CONFIG_MBEDTLS_PSA_CRYPTO_CONFIG_FILE</span> <span class="badge none">NONE</span> <span class="tag crypto">CRYPTO</span>
+<div class="config-values"><span class="val-old">"nrf-psa-crypto-want-config.h"</span><span class="val-arrow">&rarr;</span><span class="val-new">"nrf-psa-crypto-config.h"</span></div>
+<div class="config-desc">PSA config header renamed. Internal build system change.</div>
+</div>
+
+<div class="config-entry" data-risk="none" data-text="CONFIG_MBEDTLS_PSA_CRYPTO_USER_CONFIG_FILE nrf-psa-crypto-user">
+<span class="config-name">CONFIG_MBEDTLS_PSA_CRYPTO_USER_CONFIG_FILE</span> <span class="badge none">NONE</span> <span class="tag crypto">CRYPTO</span>
+<div class="config-values"><span class="val-old">"nrf-psa-crypto-config.h"</span><span class="val-arrow">&rarr;</span><span class="val-new">"nrf-psa-crypto-user-config.h"</span></div>
+<div class="config-desc">PSA user override config renamed to avoid collision.</div>
+</div>
+
+<div class="config-entry" data-risk="none" data-text="CONFIG_PSA_WANT_ALG psa crypto algorithms cmac ctr_drbg ecb ecdh">
+<span class="config-name">PSA_WANT_ALG_* (CMAC, CTR_DRBG, ECB_NO_PADDING, ECDH)</span> <span class="badge none">NONE</span> <span class="tag crypto">CRYPTO</span>
+<div class="config-values"><span class="val-old">n</span><span class="val-arrow">&rarr;</span><span class="val-new">y</span></div>
+<div class="config-desc">PSA algorithm enables. Auto-selected by BLE SMP/GATT. Replaces TinyCrypt's implicit usage.</div>
+</div>
+
+<div class="config-entry" data-risk="none" data-text="CONFIG_PSA_WANT_ECC CONFIG_PSA_WANT_GENERATE_RANDOM CONFIG_PSA_WANT_KEY_TYPE psa crypto key ecc">
+<span class="config-name">PSA_WANT_ECC/KEY_TYPE/GENERATE_RANDOM</span> <span class="badge none">NONE</span> <span class="tag crypto">CRYPTO</span>
+<div class="config-values"><span class="val-old">n</span><span class="val-arrow">&rarr;</span><span class="val-new">y</span></div>
+<div class="config-desc">PSA ECC P-256 + key management + RNG. Previously provided by TinyCrypt.</div>
+</div>
+
+<div class="config-entry" data-risk="low" data-text="CONFIG_ENTROPY_DEVICE_RANDOM_GENERATOR hardware rng">
+<span class="config-name">CONFIG_ENTROPY_DEVICE_RANDOM_GENERATOR</span> <span class="badge low">LOW</span> <span class="tag crypto">CRYPTO</span>
+<div class="config-values"><span class="val-old">n</span><span class="val-arrow">&rarr;</span><span class="val-new">y</span></div>
+<div class="config-desc">Hardware entropy driver (nRF52840 HW RNG) replaces Xoshiro PRNG. More secure.</div>
+</div>
+
+<div class="config-entry" data-risk="low" data-text="CONFIG_XOSHIRO_RANDOM_GENERATOR prng">
+<span class="config-name">CONFIG_XOSHIRO_RANDOM_GENERATOR</span> <span class="badge low">LOW</span> <span class="tag crypto">CRYPTO</span>
+<div class="config-values"><span class="val-old">y</span><span class="val-arrow">&rarr;</span><span class="val-new">n</span></div>
+<div class="config-desc">Xoshiro128++ PRNG replaced by hardware entropy. Better security posture.</div>
+</div>
+
+<h3 style="padding:12px 14px 0 14px;">MCUboot / OTA</h3>
+
+<div class="config-entry" data-risk="high" data-text="CONFIG_MCUBOOT_SIGNATURE_KEY_FILE signing key pem">
+<span class="config-name">CONFIG_MCUBOOT_SIGNATURE_KEY_FILE</span> <span class="badge high">HIGH</span> <span class="tag mcuboot">MCUBOOT</span>
+<div class="config-values"><span class="val-old">""</span><span class="val-arrow">&rarr;</span><span class="val-new">".../keys/signing_key.pem"</span></div>
+<div class="config-desc">Signing key path now in Kconfig. Verify key not in VCS and matches MCUboot public key hash.</div>
+</div>
+
+<div class="config-entry" data-risk="high" data-text="CONFIG_ROM_END_OFFSET linker flash trailer mcuboot">
+<span class="config-name">CONFIG_ROM_END_OFFSET</span> <span class="badge high">HIGH</span> <span class="tag mcuboot">MCUBOOT</span>
+<div class="config-values"><span class="val-old">0</span><span class="val-arrow">&rarr;</span><span class="val-new">0x2096</span></div>
+<div class="config-desc">Reserves 8342 bytes at end of flash for MCUboot trailer. <strong>Not page-aligned (0x2000 + 0x96)</strong>. Must exactly match MCUboot trailer size.</div>
+</div>
+
+<div class="config-entry" data-risk="low" data-text="CONFIG_MCUBOOT_UPDATE_FOOTER_SIZE trailer swap">
+<span class="config-name">CONFIG_MCUBOOT_UPDATE_FOOTER_SIZE</span> <span class="badge low">LOW</span> <span class="tag mcuboot">MCUBOOT</span>
+<div class="config-values"><span class="val-old">0x0</span><span class="val-arrow">&rarr;</span><span class="val-new">0x2000</span></div>
+<div class="config-desc">8KB reserved for MCUboot trailer. Prevents uploading oversized images.</div>
+</div>
+
+<div class="config-entry" data-risk="none" data-text="CONFIG_MCUBOOT_IMGTOOL_SIGN_VERSION version">
+<span class="config-name">CONFIG_MCUBOOT_IMGTOOL_SIGN_VERSION</span> <span class="badge none">NONE</span> <span class="tag mcuboot">MCUBOOT</span>
+<div class="config-values"><span class="val-old">"102.1.61+0"</span><span class="val-arrow">&rarr;</span><span class="val-new">"102.1.64+0"</span></div>
+<div class="config-desc">Expected version bump.</div>
+</div>
+
+<div class="config-entry" data-risk="low" data-text="CONFIG_MCUMGR_GRP_IMG_ALLOW_ERASE_PENDING mcumgr erase abort ota">
+<span class="config-name">CONFIG_MCUMGR_GRP_IMG_ALLOW_ERASE_PENDING</span> <span class="badge low">LOW</span> <span class="tag mcuboot">MCUBOOT</span>
+<div class="config-values"><span class="val-old">n</span><span class="val-arrow">&rarr;</span><span class="val-new">y</span></div>
+<div class="config-desc">Allows erasing secondary slot even with pending swap. Prevents "stuck" OTA states. SDK default change.</div>
+</div>
+
+<div class="config-entry" data-risk="low" data-text="CONFIG_MCUMGR_GRP_IMG_UPLOAD_CHECK_HOOK mcumgr validate upload">
+<span class="config-name">CONFIG_MCUMGR_GRP_IMG_UPLOAD_CHECK_HOOK</span> <span class="badge low">LOW</span> <span class="tag mcuboot">MCUBOOT</span>
+<div class="config-values"><span class="val-old">n</span><span class="val-arrow">&rarr;</span><span class="val-new">y</span></div>
+<div class="config-desc">Upload validation hook. App can accept/reject incoming firmware. Requires registered callback.</div>
+</div>
+
+<div class="config-entry" data-risk="none" data-text="CONFIG_MCUMGR_GRP_IMG_VERBOSE_ERR CONFIG_MCUMGR_SMP_VERBOSE_ERR_RESPONSE mcumgr error debug">
+<span class="config-name">MCUMGR_GRP_IMG_VERBOSE_ERR + SMP_VERBOSE_ERR_RESPONSE</span> <span class="badge none">NONE</span> <span class="tag mcuboot">MCUBOOT</span>
+<div class="config-values"><span class="val-old">n</span><span class="val-arrow">&rarr;</span><span class="val-new">y</span></div>
+<div class="config-desc">Adds "rsn" key to SMP error responses. Better OTA diagnostics.</div>
+</div>
+
+<h3 style="padding:12px 14px 0 14px;">System / Kernel</h3>
+
+<div class="config-entry" data-risk="high" data-text="CONFIG_ARM_MPU_REGION_MIN_ALIGN_AND_SIZE mpu alignment fpu sdk default">
+<span class="config-name">CONFIG_ARM_MPU_REGION_MIN_ALIGN_AND_SIZE</span> <span class="badge high">HIGH</span> <span class="tag kernel">KERNEL</span> <span class="tag sdk-default">SDK DEFAULT 32&rarr;128</span>
+<div class="config-values"><span class="val-old">32</span><span class="val-arrow">&rarr;</span><span class="val-new">128</span></div>
+<div class="config-desc">New conditional default 128 when FPU_SHARING + MPU_STACK_GUARD enabled. Forces 128-byte alignment for all thread stacks.</div>
+<div class="config-source">Kconfig: <code>zephyr/arch/arm/core/mpu/Kconfig:42</code> (v3.2.2: added <code>default 128 if FPU_SHARING &amp;&amp; MPU_STACK_GUARD</code>). Not present in v2.7.0.</div>
+<div class="config-why"><strong>Impact:</strong> Wastes RAM via padding on every thread stack. May need to increase total RAM budget. Review thread stack sizes for adequate headroom.</div>
+</div>
+
+<div class="config-entry" data-risk="medium" data-text="CONFIG_PLATFORM_SPECIFIC_INIT CONFIG_SOC_RESET_HOOK z_arm_platform_init soc_reset_hook">
+<span class="config-name">CONFIG_PLATFORM_SPECIFIC_INIT</span> <span class="badge medium">MEDIUM</span> <span class="tag kernel">KERNEL</span>
+<div class="config-values"><span class="val-old">y</span><span class="val-arrow">&rarr;</span><span class="val-new">n</span> (replaced by SOC_RESET_HOOK=y)</div>
+<div class="config-desc">DEPRECATED. z_arm_platform_init() renamed to soc_reset_hook(). Verify any custom board init uses new function name.</div>
+</div>
+
+<div class="config-entry" data-risk="none" data-text="CONFIG_SCHED_DUMB SCHED_SIMPLE scheduler rename">
+<span class="config-name">CONFIG_SCHED_DUMB / WAITQ_DUMB</span> <span class="badge none">NONE</span> <span class="tag kernel">KERNEL</span>
+<div class="config-values"><span class="val-old">y</span><span class="val-arrow">&rarr;</span><span class="val-new">n</span> (renamed to SCHED_SIMPLE / WAITQ_SIMPLE)</div>
+<div class="config-desc">Pure rename. Identical linked-list implementation. No behavioral change.</div>
+</div>
+
+<div class="config-entry" data-risk="low" data-text="CONFIG_CONSOLE console uart rtt production">
+<span class="config-name">CONFIG_CONSOLE</span> <span class="badge low">LOW</span> <span class="tag kernel">KERNEL</span>
+<div class="config-values"><span class="val-old">y</span><span class="val-arrow">&rarr;</span><span class="val-new">n</span></div>
+<div class="config-desc">Console drivers disabled. Production optimization.</div>
+</div>
+
+<div class="config-entry" data-risk="low" data-text="CONFIG_SHELL shell production debug">
+<span class="config-name">CONFIG_SHELL</span> <span class="badge low">LOW</span> <span class="tag kernel">KERNEL</span>
+<div class="config-values"><span class="val-old">y</span><span class="val-arrow">&rarr;</span><span class="val-new">n</span></div>
+<div class="config-desc">Interactive shell disabled. Saves ~10-20KB code, ~2-4KB RAM. Expected for production.</div>
+</div>
+
+<div class="config-entry" data-risk="low" data-text="CONFIG_RUNTIME_NMI nmi handler">
+<span class="config-name">CONFIG_RUNTIME_NMI</span> <span class="badge low">LOW</span> <span class="tag kernel">KERNEL</span>
+<div class="config-values"><span class="val-old">y</span><span class="val-arrow">&rarr;</span><span class="val-new">n</span></div>
+<div class="config-desc">Runtime NMI handler disabled. Default NMI handler still present.</div>
+</div>
+
+<div class="config-entry" data-risk="none" data-text="CONFIG_SEGGER_RTT rtt buffer locking section">
+<span class="config-name">SEGGER_RTT (BUFFER_DOWN/LOCKING/SECTION)</span> <span class="badge none">NONE</span> <span class="tag kernel">KERNEL</span>
+<div class="config-values">Various: 32&rarr;16, y&rarr;n, y&rarr;n</div>
+<div class="config-desc">RTT config cascade from SHELL=n. Smaller buffers, simpler locking.</div>
+</div>
+
+<h3 style="padding:12px 14px 0 14px;">Miscellaneous</h3>
+
+<div class="config-entry" data-risk="low" data-text="CONFIG_MEMFAULT_CDR_ENABLE memfault custom data recording">
+<span class="config-name">CONFIG_MEMFAULT_CDR_ENABLE</span> <span class="badge low">LOW</span> <span class="tag memfault">MEMFAULT</span>
+<div class="config-values"><span class="val-old">n</span><span class="val-arrow">&rarr;</span><span class="val-new">y</span></div>
+<div class="config-desc">Memfault CDR. SDK default flipped n&rarr;y. Adds CDR subsystem code/RAM.</div>
+</div>
+
+<div class="config-entry" data-risk="none" data-text="CONFIG_MPSL_LIB_DIR mpsl library cortex nrf52">
+<span class="config-name">CONFIG_MPSL_LIB_DIR</span> <span class="badge none">NONE</span>
+<div class="config-values"><span class="val-old">"cortex-m4"</span><span class="val-arrow">&rarr;</span><span class="val-new">"nrf52"</span></div>
+<div class="config-desc">MPSL library path reorganized from ARM core names to SoC family names.</div>
+</div>
+
+<div class="config-entry" data-risk="low" data-text="CONFIG_NRFX_SAADC adc battery sensor">
+<span class="config-name">CONFIG_NRFX_SAADC</span> <span class="badge low">LOW</span> <span class="tag hw">HW</span>
+<div class="config-values"><span class="val-old">n</span><span class="val-arrow">&rarr;</span><span class="val-new">y</span></div>
+<div class="config-desc">ADC driver enabled. Likely for battery voltage or analog sensor.</div>
+</div>
+
+<div class="config-entry" data-risk="low" data-text="CONFIG_NRFX_TWI1 i2c twi twim">
+<span class="config-name">CONFIG_NRFX_TWI1</span> <span class="badge low">LOW</span> <span class="tag hw">HW</span>
+<div class="config-values"><span class="val-old">y</span><span class="val-arrow">&rarr;</span><span class="val-new">n</span></div>
+<div class="config-desc">TWI1 disabled. Likely switched to TWIM (DMA-capable) in devicetree.</div>
+</div>
+
+<div class="config-entry" data-risk="none" data-text="CONFIG_WFA_QT wifi alliance quicktrack irrelevant">
+<span class="config-name">WFA_QT_* (DEFAULT_INTERFACE, THREAD_STACK_SIZE)</span> <span class="badge none">NONE</span>
+<div class="config-values">SDK defaults changed</div>
+<div class="config-desc">Wi-Fi Alliance QuickTrack. <strong>Irrelevant for nRF52840</strong> (no Wi-Fi).</div>
+</div>
+
+</div></div>
+
+<!-- ==================== SECTION 2: SIGNIFICANT ADDITIONS ==================== -->
+<div class="section" id="sec-added">
+<div class="section-header" onclick="toggleSection(this)">
+<span><span class="arrow">&#9660;</span> Section 2: Significant Additions (452 total, ~80 significant)</span>
+<span style="color:#8b949e">1 CRITICAL, 8 HIGH, 10 MEDIUM</span>
+</div>
+<div class="section-body">
+
+<h3 style="padding:12px 14px 0 14px;">MCUmgr / DFU (CRITICAL)</h3>
+
+<div class="config-entry" data-risk="critical" data-text="CONFIG_MCUMGR_TRANSPORT_BT_PERM_RW unauthenticated dfu security mcumgr authen">
+<span class="config-name">CONFIG_MCUMGR_TRANSPORT_BT_PERM_RW=y</span> <span class="badge critical">CRITICAL</span> <span class="tag mcuboot">MCUBOOT</span> <span class="tag crypto">SECURITY</span>
+<div class="config-desc"><strong>Unauthenticated BLE DFU.</strong> Anyone in BLE range can initiate firmware update without pairing. In v2.7.0, <code>MCUMGR_TRANSPORT_BT_AUTHEN=n</code> was used. This config was removed in v3.2.2 and replaced by a choice: PERM_RW / PERM_RW_ENCRYPT / PERM_RW_AUTHEN. The old prj.conf <code>MCUMGR_TRANSPORT_BT_AUTHEN=n</code> is <strong>silently ignored</strong>. Default with BT_SMP is PERM_RW_AUTHEN, but NCS sample backend forces PERM_RW.</div>
+<div class="config-source">Kconfig: <code>zephyr/subsys/mgmt/mcumgr/transport/Kconfig.bluetooth:27-45</code> (v3.2.2). Old <code>MCUMGR_TRANSPORT_BT_AUTHEN</code> removed entirely.</div>
+<div class="config-why"><strong>Action:</strong> Review if unauthenticated DFU is intentional. If not, explicitly set <code>CONFIG_MCUMGR_TRANSPORT_BT_PERM_RW_AUTHEN=y</code>.</div>
+</div>
+
+<div class="config-entry" data-risk="high" data-text="CONFIG_MCUMGR_GRP_IMG_ALLOW_CONFIRM_NON_ACTIVE_SLOT mcumgr confirm security sdk default">
+<span class="config-name">CONFIG_MCUMGR_GRP_IMG_ALLOW_CONFIRM_NON_ACTIVE_SLOT=y</span> <span class="badge high">HIGH</span> <span class="tag mcuboot">MCUBOOT</span> <span class="tag sdk-default">SDK DEFAULT new y</span>
+<div class="config-values"><span class="val-old">not present</span><span class="val-arrow">&rarr;</span><span class="val-new">y</span></div>
+<div class="config-desc">New default y. Allows confirming images in non-active slot via SMP. Combined with unauthenticated DFU (PERM_RW=y), attacker with BLE access can confirm a malicious image.</div>
+<div class="config-source">Kconfig: <code>zephyr/subsys/mgmt/mcumgr/grp/img/Kconfig:75</code> (v3.2.2: <code>default y</code>). Not present in v2.7.0.</div>
+</div>
+
+<div class="config-entry" data-risk="high" data-text="CONFIG_MCUBOOT_BOOTLOADER_MODE_SWAP_USING_MOVE mcuboot swap rename">
+<span class="config-name">CONFIG_MCUBOOT_BOOTLOADER_MODE_SWAP_USING_MOVE=y</span> <span class="badge high">HIGH</span> <span class="tag mcuboot">MCUBOOT</span>
+<div class="config-desc">Replaces deprecated SWAP_WITHOUT_SCRATCH. Same algorithm, new name. Verify app code #ifdefs updated.</div>
+</div>
+
+<h3 style="padding:12px 14px 0 14px;">PSA Crypto Stack</h3>
+
+<div class="config-entry" data-risk="high" data-text="CONFIG_PSA_CRYPTO psa crypto master enable">
+<span class="config-name">CONFIG_PSA_CRYPTO=y</span> <span class="badge high">HIGH</span> <span class="tag crypto">CRYPTO</span>
+<div class="config-desc"><strong>Master switch</strong> for PSA Crypto API. All BLE pairing, OTA verification, crypto now depends on this.</div>
+</div>
+
+<div class="config-entry" data-risk="high" data-text="CONFIG_NRF_SECURITY_ENABLER nrf security auto enable">
+<span class="config-name">CONFIG_NRF_SECURITY_ENABLER=y</span> <span class="badge high">HIGH</span> <span class="tag crypto">CRYPTO</span>
+<div class="config-desc">Auto-enables nrf_security when BLE requires crypto. Implies ENTROPY_GENERATOR and MBEDTLS_ENABLE_HEAP.</div>
+</div>
+
+<div class="config-entry" data-risk="high" data-text="CONFIG_PSA_CRYPTO_PROVIDER_CUSTOM nrf_security oberon cc310">
+<span class="config-name">CONFIG_PSA_CRYPTO_PROVIDER_CUSTOM=y</span> <span class="badge high">HIGH</span> <span class="tag crypto">CRYPTO</span>
+<div class="config-desc">Nordic's nrf_security (Oberon + CC310 HW) as PSA provider, not vanilla MbedTLS.</div>
+</div>
+
+<div class="config-entry" data-risk="high" data-text="CONFIG_PSA_CRYPTO_SYS_INIT psa init boot">
+<span class="config-name">CONFIG_PSA_CRYPTO_SYS_INIT=y</span> <span class="badge high">HIGH</span> <span class="tag crypto">CRYPTO</span>
+<div class="config-desc">Auto-calls psa_crypto_init() during POST_KERNEL boot. If CC310 HW init fails &rarr; k_oops().</div>
+</div>
+
+<div class="config-entry" data-risk="high" data-text="CONFIG_PSA_NEED_CC3XX_CTR_DRBG_DRIVER cc310 hardware rng">
+<span class="config-name">CONFIG_PSA_NEED_CC3XX_CTR_DRBG_DRIVER=y</span> <span class="badge high">HIGH</span> <span class="tag crypto">CRYPTO</span>
+<div class="config-desc">CC310 hardware RNG path. True random from nRF52840 RNG peripheral. Critical for BLE pairing.</div>
+</div>
+
+<div class="config-entry" data-risk="medium" data-text="CONFIG_PSA_NEED_OBERON_ECDH_SECP_R1_256 oberon ecdh p256 pairing">
+<span class="config-name">CONFIG_PSA_NEED_OBERON_ECDH_SECP_R1_256=y</span> <span class="badge medium">MEDIUM</span> <span class="tag crypto">CRYPTO</span>
+<div class="config-desc">Oberon software ECDH for P-256 (BLE SC). ECDH moved from controller (900B stack) to host via PSA. Saves RAM, runs in BT workqueue.</div>
+</div>
+
+<div class="config-entry" data-risk="medium" data-text="CONFIG_MBEDTLS_THREADING_C CONFIG_MBEDTLS_THREADING_ALT thread safety">
+<span class="config-name">MBEDTLS_THREADING_C=y + THREADING_ALT=y</span> <span class="badge medium">MEDIUM</span> <span class="tag crypto">CRYPTO</span>
+<div class="config-desc">Thread-safe PSA crypto via k_mutex. Prevents data corruption with concurrent crypto.</div>
+</div>
+
+<div class="config-entry" data-risk="medium" data-text="CONFIG_MBEDTLS_PSA_STATIC_KEY_SLOTS CONFIG_MBEDTLS_HEAP_SIZE psa key storage ram">
+<span class="config-name">MBEDTLS_PSA_STATIC_KEY_SLOTS=n, HEAP_SIZE=512</span> <span class="badge medium">MEDIUM</span> <span class="tag crypto">CRYPTO</span>
+<div class="config-desc">PSA key storage uses 512-byte heap. Monitor for PSA_ERROR_INSUFFICIENT_MEMORY.</div>
+</div>
+
+<div class="config-entry" data-risk="none" data-text="CONFIG_PSA_NEED_OBERON psa oberon auto-derived">
+<span class="config-name">PSA_NEED_OBERON_* (20+ auto-derived)</span> <span class="badge none">NONE</span> <span class="tag crypto">CRYPTO</span>
+<div class="config-desc">PSA driver dispatch. All auto-selected from PSA_WANT_* enables.</div>
+</div>
+
+<h3 style="padding:12px 14px 0 14px;">Power Management</h3>
+
+<div class="config-entry" data-risk="high" data-text="CONFIG_PM_DEVICE_SYSTEM_MANAGED power management sleep suspend resume">
+<span class="config-name">CONFIG_PM_DEVICE_SYSTEM_MANAGED=y</span> <span class="badge high">HIGH</span> <span class="tag pm">PM</span>
+<div class="config-desc">System auto-suspends devices before sleep and resumes on wake. Verify all drivers handle suspend/resume correctly.</div>
+</div>
+
+<div class="config-entry" data-risk="medium" data-text="CONFIG_PINCTRL_KEEP_SLEEP_STATE pinctrl sleep pin leakage">
+<span class="config-name">CONFIG_PINCTRL_KEEP_SLEEP_STATE=y</span> <span class="badge medium">MEDIUM</span> <span class="tag pm">PM</span>
+<div class="config-desc">Keeps sleep-state pin configs at runtime. Pins set to low-leakage states during sleep.</div>
+</div>
+
+<div class="config-entry" data-risk="medium" data-text="CONFIG_PM_DEVICE_POWER_DOMAIN power domain">
+<span class="config-name">CONFIG_PM_DEVICE_POWER_DOMAIN=y</span> <span class="badge medium">MEDIUM</span> <span class="tag pm">PM</span>
+<div class="config-desc">Hierarchical power management. Devices grouped under power domains.</div>
+</div>
+
+<h3 style="padding:12px 14px 0 14px;">Flash / Storage</h3>
+
+<div class="config-entry" data-risk="high" data-text="CONFIG_FLASH_HAS_EXPLICIT_ERASE flash nor nvs zms">
+<span class="config-name">CONFIG_FLASH_HAS_EXPLICIT_ERASE=y</span> <span class="badge high">HIGH</span> <span class="tag storage">STORAGE</span>
+<div class="config-desc">nRF52840 NOR flash requires explicit erase. Drives NVS vs ZMS choice. Must remain y.</div>
+</div>
+
+<div class="config-entry" data-risk="high" data-text="CONFIG_NVS nvs storage settings select depends flash_page_layout">
+<span class="config-name">CONFIG_NVS=y</span> <span class="badge high">HIGH</span> <span class="tag storage">STORAGE</span> <span class="tag select-depends">SELECT&rarr;DEPENDS</span>
+<div class="config-desc">NVS now requires explicit enable. <strong>Kconfig changed from <code>select FLASH_PAGE_LAYOUT</code> to <code>depends on FLASH_PAGE_LAYOUT</code>.</strong> Same class of silent failure as ATT handle bug. If FLASH_PAGE_LAYOUT not explicitly enabled, NVS may fail to initialize.</div>
+<div class="config-source">Kconfig: <code>zephyr/subsys/fs/nvs/Kconfig:8</code> (v2.7.0: <code>select FLASH_PAGE_LAYOUT</code>) &rarr; (v3.2.2: <code>depends on FLASH_PAGE_LAYOUT</code>).</div>
+</div>
+
+<div class="config-entry" data-risk="medium" data-text="CONFIG_STREAM_FLASH_POST_WRITE_CALLBACK stream flash dfu mcumgr">
+<span class="config-name">CONFIG_STREAM_FLASH_POST_WRITE_CALLBACK=y</span> <span class="badge medium">MEDIUM</span> <span class="tag storage">STORAGE</span>
+<div class="config-desc">Post-write callback for stream flash. Required for MCUmgr OTA DFU.</div>
+</div>
+
+<h3 style="padding:12px 14px 0 14px;">BLE / GATT</h3>
+
+<div class="config-entry" data-risk="medium" data-text="CONFIG_BT_SETTINGS_CCC_STORE_MAX bt ccc settings persist">
+<span class="config-name">CONFIG_BT_SETTINGS_CCC_STORE_MAX=48</span> <span class="badge medium">MEDIUM</span> <span class="tag bt">BT</span>
+<div class="config-values"><span class="val-old">not present</span><span class="val-arrow">&rarr;</span><span class="val-new">48</span></div>
+<div class="config-desc">Max persisted CCC descriptors. Verify GATT service doesn't exceed 48 CCC descriptors.</div>
+</div>
+
+<div class="config-entry" data-risk="medium" data-text="CONFIG_BT_CTLR_ENTROPY bt controller entropy hardware rng">
+<span class="config-name">CONFIG_BT_CTLR_ENTROPY=y</span> <span class="badge medium">MEDIUM</span> <span class="tag bt">BT</span>
+<div class="config-values"><span class="val-old">not present</span><span class="val-arrow">&rarr;</span><span class="val-new">y</span></div>
+<div class="config-desc">New config. Replaces ENTROPY_BT_HCI path. Controller provides entropy directly via new driver interface.</div>
+</div>
+
+<h3 style="padding:12px 14px 0 14px;">MPSL / Clock / SOC</h3>
+
+<div class="config-entry" data-risk="high" data-text="CONFIG_MPSL_HFCLK_LATENCY hfxo startup ble power">
+<span class="config-name">CONFIG_MPSL_HFCLK_LATENCY=1400</span> <span class="badge high">HIGH</span> <span class="tag hw">HW</span>
+<div class="config-values"><span class="val-old">not present</span><span class="val-arrow">&rarr;</span><span class="val-new">1400</span></div>
+<div class="config-desc">HFXO ramp-up latency (1400us). Conservative. Measure actual crystal startup. Too low &rarr; BLE timing issues.</div>
+</div>
+
+<div class="config-entry" data-risk="medium" data-text="CONFIG_SOC_FLASH_NRF_RADIO_SYNC flash ble radio timeout">
+<span class="config-name">CONFIG_SOC_FLASH_NRF_RADIO_SYNC_MPSL_NORMAL_PRIORITY_TIMEOUT_US=10000</span> <span class="badge medium">MEDIUM</span> <span class="tag hw">HW</span>
+<div class="config-desc">Flash/BLE radio sync timeout (10ms). Flash starts with normal priority, escalates after 10ms.</div>
+</div>
+
+<div class="config-entry" data-risk="high" data-text="CONFIG_COMMON_LIBC_MALLOC_ARENA_SIZE malloc heap picolibc sram">
+<span class="config-name">CONFIG_COMMON_LIBC_MALLOC_ARENA_SIZE=-1</span> <span class="badge high">HIGH</span> <span class="tag kernel">KERNEL</span>
+<div class="config-values"><span class="val-old">not present</span><span class="val-arrow">&rarr;</span><span class="val-new">-1</span></div>
+<div class="config-desc">malloc() gets ALL remaining SRAM. Accidental malloc() calls silently succeed. Set explicit limit if not using dynamic allocation.</div>
+</div>
+
+<h3 style="padding:12px 14px 0 14px;">Misc New Configs</h3>
+
+<div class="config-entry" data-risk="medium" data-text="CONFIG_POSIX_TIMERS posix timer picolibc">
+<span class="config-name">CONFIG_POSIX_TIMERS=y</span> <span class="badge medium">MEDIUM</span> <span class="tag kernel">KERNEL</span>
+<div class="config-desc">POSIX timer/clock/sleep. Likely pulled transitively by picolibc.</div>
+</div>
+
+<div class="config-entry" data-risk="medium" data-text="CONFIG_LOG_RATELIMIT log rate limit flood">
+<span class="config-name">CONFIG_LOG_RATELIMIT=y</span> <span class="badge medium">MEDIUM</span> <span class="tag kernel">KERNEL</span>
+<div class="config-desc">New log rate-limiting (5s interval). Small code overhead.</div>
+</div>
+
+<div class="config-entry" data-risk="medium" data-text="CONFIG_SEGGER_RTT_INIT_MODE_STRONG_CHECK rtt mcuboot transition">
+<span class="config-name">CONFIG_SEGGER_RTT_INIT_MODE_STRONG_CHECK=y</span> <span class="badge medium">MEDIUM</span> <span class="tag kernel">KERNEL</span>
+<div class="config-desc">RTT init preserves control block from MCUboot. Prevents losing RTT connection during boot.</div>
+</div>
+
+<div class="config-entry" data-risk="low" data-text="CONFIG_MEMFAULT memfault coredump mpu nvic reboot">
+<span class="config-name">MEMFAULT_* (~15 new configs)</span> <span class="badge low">LOW</span> <span class="tag memfault">MEMFAULT</span>
+<div class="config-desc">Coredump collects MPU (72B) + NVIC (66B). Reboot tracking in .noinit section. All defaults correct.</div>
+</div>
+
+<div class="config-entry" data-risk="medium" data-text="CONFIG_MEMFAULT_NCS_DEVICE_INFO_CUSTOM memfault device info custom">
+<span class="config-name">CONFIG_MEMFAULT_NCS_DEVICE_INFO_CUSTOM=y</span> <span class="badge medium">MEDIUM</span> <span class="tag memfault">MEMFAULT</span>
+<div class="config-desc">App provides custom memfault_platform_get_device_info(). If function missing &rarr; linker error.</div>
+</div>
+
+<div class="config-entry" data-risk="low" data-text="CONFIG_SB_VALIDATION_STRUCT secure boot validation hash key">
+<span class="config-name">SB_VALIDATION_STRUCT_HAS_HASH/PUBLIC_KEY=y</span> <span class="badge low">LOW</span> <span class="tag crypto">SECURITY</span>
+<div class="config-desc">FW validation struct includes hash and public key. Defaults correct for ECDSA-P256.</div>
+</div>
+
+<div class="config-entry" data-risk="none" data-text="CONFIG_ZEPHYR modules cmsis hal tdk hostap nrf_wifi percepio">
+<span class="config-name">ZEPHYR_*_MODULE (CMSIS_6, HAL_TDK, HOSTAP, NRF_WIFI, PERCEPIO)</span> <span class="badge none">NONE</span> <span class="tag build">BUILD</span>
+<div class="config-desc">Module registration only. Registered but inactive unless explicitly used.</div>
+</div>
+
+<div class="config-entry" data-risk="none" data-text="CONFIG_MCUBOOT_APPLICATION_IMAGE_NUMBER mcuboot image ids sysbuild">
+<span class="config-name">MCUBOOT_*_IMAGE_NUMBER (all -1 except APP=0)</span> <span class="badge none">NONE</span> <span class="tag mcuboot">MCUBOOT</span>
+<div class="config-desc">Sysbuild image numbering. All -1 (N/A) for single-image nRF52840.</div>
+</div>
+
+</div></div>
+
+<!-- ==================== SECTION 3: SIGNIFICANT REMOVALS ==================== -->
+<div class="section" id="sec-removed">
+<div class="section-header" onclick="toggleSection(this)">
+<span><span class="arrow">&#9660;</span> Section 3: Significant Removals (out of 959)</span>
+<span style="color:#8b949e">4 CRITICAL, 3 HIGH</span>
+</div>
+<div class="section-body">
+
+<h3 style="padding:12px 14px 0 14px;">SMP / DFU Transport (Production RCA)</h3>
+
+<div class="config-entry" data-risk="critical" data-text="CONFIG_MCUMGR_TRANSPORT_BT_DYNAMIC_SVC_REGISTRATION smp dfu att handle production rca select depends gatt">
+<span class="config-name">CONFIG_MCUMGR_TRANSPORT_BT_DYNAMIC_SVC_REGISTRATION=y (removed)</span> <span class="badge critical">CRITICAL</span> <span class="tag bt">BT</span> <span class="tag rca">PRODUCTION RCA</span> <span class="tag select-depends">SELECT&rarr;DEPENDS</span>
+<div class="config-desc"><strong>Root cause of ATT handle restructure &mdash; confirmed production bug.</strong> In NCS 2.7.0 this used <code>select BT_GATT_DYNAMIC_DB</code>. In 3.2.2, changed to <code>depends on BT_GATT_DYNAMIC_DB</code>. Silently disappeared, SMP service moved to static registration, shifting ALL ATT handles.</div>
+<div class="config-source">Kconfig: <code>zephyr/subsys/mgmt/mcumgr/transport/Kconfig.bluetooth:94</code> (v2.7.0) &rarr; <code>:106</code> (v3.2.2). Impl: <code>smp_bt.c:376-381</code>.</div>
+</div>
+
+<div class="config-entry" data-risk="critical" data-text="CONFIG_MCUMGR_TRANSPORT_BT_AUTHEN mcumgr authen removed silently ignored">
+<span class="config-name">CONFIG_MCUMGR_TRANSPORT_BT_AUTHEN=n (removed)</span> <span class="badge critical">CRITICAL</span> <span class="tag bt">BT</span> <span class="tag mcuboot">MCUBOOT</span>
+<div class="config-desc"><strong>Old prj.conf setting silently ignored.</strong> Replaced by choice (PERM_RW / PERM_RW_ENCRYPT / PERM_RW_AUTHEN). Config no longer exists in Kconfig &mdash; setting it in prj.conf produces no warning, no error, just silently ignored.</div>
+<div class="config-source">Kconfig: <code>zephyr/subsys/mgmt/mcumgr/transport/Kconfig.bluetooth:27-45</code> (v3.2.2: choice replaces bool).</div>
+<div class="config-why"><strong>Impact:</strong> If prj.conf still has <code>CONFIG_MCUMGR_TRANSPORT_BT_AUTHEN=n</code>, it's ignored and the default PERM_RW or PERM_RW_AUTHEN takes effect. Verify which choice is active.</div>
+</div>
+
+<div class="config-entry" data-risk="critical" data-text="CONFIG_BT_BUF_ACL_RX_COUNT bt acl rx buffer formula removed">
+<span class="config-name">CONFIG_BT_BUF_ACL_RX_COUNT=6 (removed)</span> <span class="badge critical">CRITICAL</span> <span class="tag bt">BT</span>
+<div class="config-desc"><strong>Explicitly set to 6 in v61. Config removed from Kconfig in v3.2.2</strong>, replaced by internal formula based on BT_MAX_CONN. Formula yields 2-3 buffers for typical single-connection wearable. 50% fewer ACL RX buffers may cause packet drops under DFU load or high notification throughput.</div>
+<div class="config-source">Kconfig: <code>zephyr/subsys/bluetooth/host/Kconfig:52</code> (v2.7.0: explicit config) &rarr; removed in v3.2.2, computed internally.</div>
+<div class="config-why"><strong>Action:</strong> Monitor BLE for HCI flow control events or "no buffers" errors during DFU. If issues found, look for the new computed config or override mechanism.</div>
+</div>
+
+<div class="config-entry" data-risk="critical" data-text="CONFIG_BT_CTLR bt controller removed hidden has_bt_ctlr softdevice">
+<span class="config-name">CONFIG_BT_CTLR=y (removed)</span> <span class="badge critical">CRITICAL</span> <span class="tag bt">BT</span>
+<div class="config-desc"><code>CONFIG_BT_CTLR=y</code> replaced by hidden <code>HAS_BT_CTLR</code> selected by <code>BT_LL_SOFTDEVICE</code>. Old prj.conf <code>CONFIG_BT_CTLR=y</code> is <strong>silently ignored</strong>. If BT_LL_SOFTDEVICE=y is not set, there may be no BLE controller.</div>
+<div class="config-source">Kconfig: <code>zephyr/subsys/bluetooth/controller/Kconfig:12</code> (v2.7.0: bool) &rarr; (v3.2.2: hidden, selected by BT_LL_SOFTDEVICE).</div>
+<div class="config-why"><strong>Action:</strong> Verify <code>CONFIG_BT_LL_SOFTDEVICE=y</code> is set in v64 config. Remove <code>CONFIG_BT_CTLR=y</code> from prj.conf if present.</div>
+</div>
+
+<h3 style="padding:12px 14px 0 14px;">Hardware / Board</h3>
+
+<div class="config-entry" data-risk="high" data-text="CONFIG_BOARD_ENABLE_DCDC CONFIG_BOARD_ENABLE_DCDC_HV dcdc regulator power devicetree deprecated">
+<span class="config-name">CONFIG_BOARD_ENABLE_DCDC=y + DCDC_HV=y (removed)</span> <span class="badge high">HIGH</span> <span class="tag hw">HW</span>
+<div class="config-desc"><strong>DC/DC converter enable migrated to devicetree.</strong> SOC_DCDC_NRF52X now selects DEPRECATED. Must have <code>regulator-initial-mode = &lt;NRF5X_REG_MODE_DCDC&gt;</code> in board DTS. Without it &rarr; 2-3x higher current.</div>
+<div class="config-source">Board Kconfig: <code>BOARD_ENABLE_DCDC</code> removed from board Kconfig.defconfig. <code>soc.c</code> checks both Kconfig and DT, but DT is the canonical source in v3.2.2.</div>
+</div>
+
+<div class="config-entry" data-risk="low" data-text="CONFIG_I2C_NRFX_TWI twi twim i2c dma">
+<span class="config-name">CONFIG_I2C_NRFX_TWI=y + HW configs</span> <span class="badge low">LOW</span> <span class="tag hw">HW</span>
+<div class="config-desc">TWI (non-DMA I2C) driver removed. DT switched to TWIM (DMA-capable). Verify I2C devices function.</div>
+</div>
+
+<div class="config-entry" data-risk="none" data-text="CONFIG_GPIO_AS_PINRESET gpio nreset deprecated devicetree">
+<span class="config-name">CONFIG_GPIO_AS_PINRESET=n</span> <span class="badge none">NONE</span> <span class="tag hw">HW</span>
+<div class="config-desc">Deprecated &rarr; devicetree. Was already n.</div>
+</div>
+
+<h3 style="padding:12px 14px 0 14px;">BLE Crypto Migration</h3>
+
+<div class="config-entry" data-risk="high" data-text="CONFIG_BT_ECC CONFIG_BT_TINYCRYPT_ECC ecdh tinycrypt psa rewrite">
+<span class="config-name">BT_ECC / BT_TINYCRYPT_ECC / BT_CTLR_ECDH_* (all removed)</span> <span class="badge high">HIGH</span> <span class="tag bt">BT</span> <span class="tag crypto">CRYPTO</span>
+<div class="config-desc"><strong>Entire BLE ECC subsystem rewritten.</strong> BT_TINYCRYPT_ECC removed entirely. BT_ECC rewritten from TinyCrypt to PSA Crypto. Controller-side ECDH (900B stack thread) eliminated. ECDH now via host PSA/Oberon. Different code paths, timing, and stack usage.</div>
+<div class="config-source">Kconfig: <code>zephyr/subsys/bluetooth/host/Kconfig</code> BT_ECC section completely rewritten. <code>BT_TINYCRYPT_ECC</code> deleted.</div>
+</div>
+
+<div class="config-entry" data-risk="high" data-text="CONFIG_BT_GATT_CACHING bt gatt caching hash tinycrypt psa crypto select depends">
+<span class="config-name">BT_GATT_CACHING crypto backend change</span> <span class="badge high">HIGH</span> <span class="tag bt">BT</span> <span class="tag crypto">CRYPTO</span>
+<div class="config-desc"><strong>GATT caching hash computation moved from TinyCrypt AES to PSA Crypto.</strong> Select chain changed: was <code>select TINYCRYPT, select TINYCRYPT_AES_CMAC</code>, now <code>select PSA_WANT_ALG_CMAC, select PSA_WANT_KEY_TYPE_AES</code>. Verify GATT caching works correctly after migration.</div>
+<div class="config-source">Kconfig: <code>zephyr/subsys/bluetooth/host/Kconfig.gatt</code> BT_GATT_CACHING selects completely rewritten.</div>
+</div>
+
+<div class="config-entry" data-risk="none" data-text="CONFIG_TINYCRYPT tinycrypt removed deprecated psa">
+<span class="config-name">CONFIG_TINYCRYPT=y (removed)</span> <span class="badge none">NONE</span> <span class="tag crypto">CRYPTO</span>
+<div class="config-desc">Entire TinyCrypt module deleted from Zephyr. All crypto now via PSA API.</div>
+</div>
+
+<h3 style="padding:12px 14px 0 14px;">Systemic: select &rarr; depends on (9 BT Audio profiles)</h3>
+
+<div class="config-entry" data-risk="medium" data-text="bt audio profiles select depends bt_gatt_dynamic_db systemic bap cap csip has mcs micp ots tbs vcp">
+<span class="config-name">9 BT Audio profiles: BAP, CAP, CSIP, HAS, MCS, MICP, OTS, TBS, VCP</span> <span class="badge medium">MEDIUM</span> <span class="tag bt">BT</span> <span class="tag select-depends">SELECT&rarr;DEPENDS</span>
+<div class="config-desc"><strong>Systemic SDK-wide change:</strong> All 9 profiles changed from <code>select BT_GATT_DYNAMIC_DB</code> to <code>depends on BT_GATT_DYNAMIC_DB</code>. Not directly used by this app, but confirms the pattern is SDK-wide. Any future use of these profiles requires explicit <code>BT_GATT_DYNAMIC_DB=y</code>.</div>
+<div class="config-source">Kconfig: <code>zephyr/subsys/bluetooth/audio/Kconfig.*</code> (v2.7.0: select) &rarr; (v3.2.2: depends on).</div>
+</div>
+
+<h3 style="padding:12px 14px 0 14px;">Shell / Console / Entropy</h3>
+
+<div class="config-entry" data-risk="none" data-text="shell console cascade device_shell kernel_shell devmem_shell getopt">
+<span class="config-name">All SHELL/CONSOLE configs (~25 entries)</span> <span class="badge none">NONE</span> <span class="tag kernel">KERNEL</span>
+<div class="config-desc">SHELL=n cascades to remove all sub-shell configs. All still exist in Kconfig, just inactive.</div>
+</div>
+
+<div class="config-entry" data-risk="low" data-text="CONFIG_ENTROPY_BT_HCI entropy bt hci rng replaced">
+<span class="config-name">CONFIG_ENTROPY_BT_HCI=y (removed)</span> <span class="badge low">LOW</span> <span class="tag crypto">CRYPTO</span>
+<div class="config-desc">BT HCI entropy replaced by ENTROPY_DEVICE_RANDOM_GENERATOR=y (hardware RNG direct). More secure path.</div>
+</div>
+
+<div class="config-entry" data-risk="none" data-text="CONFIG_GENERATE_MBEDTLS_CFG_FILE build system deprecated sysbuild">
+<span class="config-name">Build/NCS configs (GENERATE_MBEDTLS_CFG_FILE, BUILD_S1_VARIANT, etc.)</span> <span class="badge none">NONE</span> <span class="tag build">BUILD</span>
+<div class="config-desc">Old NCS child-image build system configs. Removed/replaced by sysbuild.</div>
+</div>
+
+</div></div>
+
+<!-- ==================== SECTION 4: NOISE SUMMARY ==================== -->
+<div class="section" id="sec-noise">
+<div class="section-header" onclick="toggleSection(this)">
+<span><span class="arrow">&#9660;</span> Section 4: Noise Summary (~870 configs)</span>
+<span style="color:#8b949e">LOG_LEVEL entries, PSA_WANT_*=n, POSIX_*=n</span>
+</div>
+<div class="section-body">
+
+<div class="noise-summary">
+<div class="noise-cat">
+<span class="noise-count">~600</span> removed: <strong>BT Audio/Mesh/Profile LOG_LEVEL entries</strong><br>
+<span style="color:#8b949e">BT_BAP_*, BT_CAP_*, BT_MESH_*, BT_VCP_*, BT_MICP_*, BT_OTS_*, BT_HFP_*, etc. &mdash; each subsystem had 8 LOG_LEVEL variants. NCS 3.2.2 restructured logging to not include unused subsystem configs.</span>
+</div>
+<div class="noise-cat">
+<span class="noise-count">~50</span> added: <strong>PSA_WANT_ALG_*=n / PSA_WANT_KEY_TYPE_*=n</strong><br>
+<span style="color:#8b949e">Post-quantum crypto (ML_DSA, ML_KEM, XMSS), AES key wrap, ChaCha20, SHAKE, WPA3 SAE, SRP, SPAKE2P &mdash; all disabled.</span>
+</div>
+<div class="noise-cat">
+<span class="noise-count">~30</span> added: <strong>POSIX_*=n entries</strong><br>
+<span style="color:#8b949e">BARRIERS, CLOCK_SELECTION, CPUTIME, FD_MGMT, FILE_SYSTEM, etc. &mdash; POSIX modularization in Zephyr 4.x. All disabled except POSIX_TIMERS=y.</span>
+</div>
+<div class="noise-cat">
+<span class="noise-count">~30</span> added: <strong>CONFIG_*_LOG_LEVEL entries (CPU_LOAD, CRC, VIRTIO, WIFI_PROV, XSI)</strong><br>
+<span style="color:#8b949e">New subsystem log level defaults. All at level 3 (DEFAULT).</span>
+</div>
+<div class="noise-cat">
+<span class="noise-count">~30</span> added: <strong>CONFIG_NRFX_*=n (SPI0, SPI1, SPI2, SPIM, TIMER, TWI0, TWIS, UART0, UARTE, etc.)</strong><br>
+<span style="color:#8b949e">nrfx peripheral driver enables now explicitly in .config. All disabled for unused peripherals.</span>
+</div>
+<div class="noise-cat">
+<span class="noise-count">~30</span> removed: <strong>Misc platform/irrelevant configs</strong><br>
+<span style="color:#8b949e">INTC_ESP32, I2C_AMBIQ_DMA, GSM_MUX (deprecated), KSCAN (&rarr; input subsystem), KOBJECT_* (userspace only), FOTA/DOWNLOAD_CLIENT (nRF91 only).</span>
+</div>
+</div>
+
+</div></div>
+
+<!-- ==================== SECTION 5: SELECT &rarr; DEPENDS PATTERN ==================== -->
+<div class="section" id="sec-pattern">
+<div class="section-header" onclick="toggleSection(this)">
+<span><span class="arrow">&#9660;</span> Section 5: Systemic Pattern &mdash; select &rarr; depends on Changes</span>
+<span style="color:#f85149">SDK-wide class of silent failures</span>
+</div>
+<div class="section-body">
+
+<div style="padding:14px;">
+<p style="margin-bottom:12px;"><strong>This is the single most dangerous pattern in the NCS 2.7.0 &rarr; 3.2.2 migration.</strong></p>
+<p style="margin-bottom:12px;">When a Kconfig changes from <code>select FOO</code> to <code>depends on FOO</code>:</p>
+<ul style="margin-left:20px;margin-bottom:12px;">
+<li><code>select FOO</code> = "I will force-enable FOO regardless of anything else"</li>
+<li><code>depends on FOO</code> = "I require FOO to already be enabled, or I silently disappear"</li>
+</ul>
+<p style="margin-bottom:12px;">If <code>FOO</code> was never explicitly set (it was being force-enabled), switching to <code>depends on</code> causes the config to <strong>silently vanish</strong> from the build with no warning, no error. The feature just stops working.</p>
+
+<table style="width:100%;border-collapse:collapse;margin-top:12px;">
+<tr style="border-bottom:1px solid #30363d;"><th style="text-align:left;padding:8px;color:#58a6ff;">Config</th><th style="text-align:left;padding:8px;color:#58a6ff;">Was selecting</th><th style="text-align:left;padding:8px;color:#58a6ff;">Impact</th><th style="text-align:left;padding:8px;color:#58a6ff;">Status</th></tr>
+<tr style="border-bottom:1px solid #21262d;"><td style="padding:8px;color:#f85149;">MCUMGR_TRANSPORT_BT_DYNAMIC_SVC_REGISTRATION</td><td style="padding:8px;">BT_GATT_DYNAMIC_DB</td><td style="padding:8px;">ATT handle restructure</td><td style="padding:8px;"><span class="badge critical">CONFIRMED BUG</span></td></tr>
+<tr style="border-bottom:1px solid #21262d;"><td style="padding:8px;color:#d29922;">NVS</td><td style="padding:8px;">FLASH_PAGE_LAYOUT</td><td style="padding:8px;">NVS init failure</td><td style="padding:8px;"><span class="badge critical">VERIFY</span></td></tr>
+<tr style="border-bottom:1px solid #21262d;"><td style="padding:8px;color:#8b949e;">BT_BAP_UNICAST_SERVER</td><td style="padding:8px;">BT_GATT_DYNAMIC_DB</td><td style="padding:8px;">Audio profile (unused)</td><td style="padding:8px;"><span class="badge none">N/A</span></td></tr>
+<tr style="border-bottom:1px solid #21262d;"><td style="padding:8px;color:#8b949e;">BT_CAP_ACCEPTOR</td><td style="padding:8px;">BT_GATT_DYNAMIC_DB</td><td style="padding:8px;">Audio profile (unused)</td><td style="padding:8px;"><span class="badge none">N/A</span></td></tr>
+<tr style="border-bottom:1px solid #21262d;"><td style="padding:8px;color:#8b949e;">BT_CSIP_SET_MEMBER</td><td style="padding:8px;">BT_GATT_DYNAMIC_DB</td><td style="padding:8px;">Audio profile (unused)</td><td style="padding:8px;"><span class="badge none">N/A</span></td></tr>
+<tr style="border-bottom:1px solid #21262d;"><td style="padding:8px;color:#8b949e;">BT_HAS</td><td style="padding:8px;">BT_GATT_DYNAMIC_DB</td><td style="padding:8px;">Hearing aid (unused)</td><td style="padding:8px;"><span class="badge none">N/A</span></td></tr>
+<tr style="border-bottom:1px solid #21262d;"><td style="padding:8px;color:#8b949e;">BT_MCS / BT_MICP / BT_OTS</td><td style="padding:8px;">BT_GATT_DYNAMIC_DB</td><td style="padding:8px;">Media/Mic/OTS (unused)</td><td style="padding:8px;"><span class="badge none">N/A</span></td></tr>
+<tr style="border-bottom:1px solid #21262d;"><td style="padding:8px;color:#8b949e;">BT_TBS / BT_VCP</td><td style="padding:8px;">BT_GATT_DYNAMIC_DB</td><td style="padding:8px;">Telephony/Volume (unused)</td><td style="padding:8px;"><span class="badge none">N/A</span></td></tr>
+</table>
+</div>
+
+</div></div>
+
+<script>
+function toggleSection(header) {
+    header.classList.toggle('collapsed');
+    header.nextElementSibling.classList.toggle('hidden');
+}
+
+let currentRiskFilter = 'all';
+
+function filterConfigs() {
+    const query = document.getElementById('searchBox').value.toLowerCase();
+    document.querySelectorAll('.config-entry').forEach(entry => {
+        const text = (entry.getAttribute('data-text') || '').toLowerCase() + ' ' + entry.textContent.toLowerCase();
+        const risk = entry.getAttribute('data-risk') || '';
+        const matchesSearch = !query || text.includes(query);
+        const matchesRisk = currentRiskFilter === 'all' || risk === currentRiskFilter;
+        entry.style.display = (matchesSearch && matchesRisk) ? '' : 'none';
+    });
+}
+
+function filterByRisk(risk, btn) {
+    currentRiskFilter = risk;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    filterConfigs();
+}
+</script>
+
+</body>
+</html>

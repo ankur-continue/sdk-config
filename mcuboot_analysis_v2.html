@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MCUboot Config Deep Analysis v2: NCS 2.7.0 → 3.2.2</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #0d1117; color: #c9d1d9; font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace; font-size: 13px; line-height: 1.6; padding: 20px; }
+h1 { color: #58a6ff; font-size: 22px; margin-bottom: 8px; }
+h2 { color: #79c0ff; font-size: 17px; margin: 24px 0 12px 0; border-bottom: 1px solid #21262d; padding-bottom: 6px; }
+h3 { color: #d2a8ff; font-size: 14px; margin: 16px 0 6px 0; }
+.subtitle { color: #8b949e; font-size: 13px; margin-bottom: 20px; }
+.exec-summary { background: #161b22; border: 1px solid #30363d; border-radius: 6px; padding: 16px; margin-bottom: 20px; }
+.exec-summary h2 { margin-top: 0; border: none; }
+.stat-row { display: flex; gap: 12px; margin: 12px 0; flex-wrap: wrap; }
+.stat-box { background: #0d1117; border: 1px solid #30363d; border-radius: 6px; padding: 10px 16px; text-align: center; min-width: 100px; }
+.stat-box .num { font-size: 24px; font-weight: bold; }
+.stat-box .label { font-size: 11px; color: #8b949e; }
+.stat-box.critical .num { color: #f85149; }
+.stat-box.high .num { color: #d29922; }
+.stat-box.medium .num { color: #58a6ff; }
+.stat-box.low .num { color: #3fb950; }
+.stat-box.none .num { color: #8b949e; }
+.search-box { width: 100%; padding: 10px 14px; background: #0d1117; border: 1px solid #30363d; border-radius: 6px; color: #c9d1d9; font-family: inherit; font-size: 13px; margin-bottom: 16px; }
+.search-box:focus { outline: none; border-color: #58a6ff; }
+.section { margin-bottom: 20px; }
+.section-header { background: #161b22; border: 1px solid #30363d; border-radius: 6px 6px 0 0; padding: 10px 14px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none; }
+.section-header:hover { background: #1c2128; }
+.section-header .arrow { transition: transform 0.2s; }
+.section-header.collapsed .arrow { transform: rotate(-90deg); }
+.section-body { border: 1px solid #30363d; border-top: none; border-radius: 0 0 6px 6px; }
+.section-body.hidden { display: none; }
+.config-entry { padding: 12px 14px; border-bottom: 1px solid #21262d; }
+.config-entry:last-child { border-bottom: none; }
+.config-entry:hover { background: #161b22; }
+.config-name { font-weight: bold; color: #f0f6fc; font-size: 13px; }
+.config-values { margin: 4px 0; }
+.val-old { color: #f85149; }
+.val-new { color: #3fb950; }
+.val-arrow { color: #8b949e; margin: 0 6px; }
+.config-desc { color: #8b949e; margin-top: 4px; font-size: 12px; }
+.config-source { color: #6e7681; font-size: 11px; margin-top: 2px; }
+.config-why { color: #c9d1d9; margin-top: 4px; font-size: 12px; }
+.badge { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 10px; font-weight: bold; text-transform: uppercase; margin-left: 8px; vertical-align: middle; }
+.badge.critical { background: #f8514922; color: #f85149; border: 1px solid #f8514944; }
+.badge.high { background: #d2992222; color: #d29922; border: 1px solid #d2992244; }
+.badge.medium { background: #58a6ff22; color: #58a6ff; border: 1px solid #58a6ff44; }
+.badge.low { background: #3fb95022; color: #3fb950; border: 1px solid #3fb95044; }
+.badge.none { background: #8b949e22; color: #8b949e; border: 1px solid #8b949e44; }
+.tag { display: inline-block; padding: 0 6px; border-radius: 4px; font-size: 10px; margin-right: 4px; background: #21262d; color: #8b949e; }
+.tag.boot { background: #5c3d1f; color: #d29922; }
+.tag.crypto { background: #3d1f5c; color: #d2a8ff; }
+.tag.libc { background: #1f5c3d; color: #3fb950; }
+.tag.kernel { background: #1f3d5c; color: #58a6ff; }
+.tag.hw { background: #5c1f3d; color: #f778ba; }
+.tag.build { background: #2d2d2d; color: #c9d1d9; }
+.tag.flash { background: #5c5c1f; color: #e3b341; }
+.tag.security { background: #3d1f5c; color: #d2a8ff; }
+.tag.sdk-default { background: #d2992233; color: #d29922; border: 1px solid #d2992255; }
+.tag.new-algo { background: #f8514933; color: #ff7b72; border: 1px solid #f8514955; }
+.action-items { background: #1c0e0e; border: 1px solid #f8514944; border-radius: 6px; padding: 16px; margin: 16px 0; }
+.action-items h3 { color: #f85149; margin-bottom: 8px; }
+.action-item { padding: 6px 0; border-bottom: 1px solid #21262d; }
+.action-item:last-child { border-bottom: none; }
+.noise-summary { background: #161b22; border: 1px solid #30363d; border-radius: 6px; padding: 16px; margin: 16px 0; }
+.noise-cat { margin: 8px 0; padding: 6px 0; border-bottom: 1px solid #21262d; }
+.noise-cat:last-child { border-bottom: none; }
+.noise-count { color: #58a6ff; font-weight: bold; }
+.filter-bar { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+.filter-btn { padding: 4px 10px; border-radius: 14px; border: 1px solid #30363d; background: #0d1117; color: #8b949e; cursor: pointer; font-size: 11px; font-family: inherit; }
+.filter-btn:hover { border-color: #58a6ff; color: #58a6ff; }
+.filter-btn.active { background: #58a6ff22; border-color: #58a6ff; color: #58a6ff; }
+.v2-note { background: #1c1c0e; border: 1px solid #d2992244; border-radius: 6px; padding: 12px 16px; margin-bottom: 20px; color: #d29922; font-size: 12px; }
+</style>
+</head>
+<body>
+
+<h1>MCUboot Config Deep Analysis v2</h1>
+<p class="subtitle">NCS 2.7.0 (v61) &rarr; NCS 3.2.2 (v64) &mdash; custom_board (nRF52840) &mdash; 48KB MCUboot partition &mdash; Generated 2026-02-22</p>
+
+<div class="v2-note">
+<strong>v2 Second-Pass Analysis:</strong> Every MCUboot config checked against Kconfig source in BOTH SDK versions (<code>/opt/nordic/ncs/v2.7.0/bootloader/mcuboot/</code> and <code>/opt/nordic/ncs/v3.2.2/bootloader/mcuboot/</code>). All <code>select</code>, <code>depends on</code>, <code>default</code>, and <code>imply</code> changes documented with source line numbers.
+</div>
+
+<div class="exec-summary">
+<h2>Executive Summary</h2>
+<div class="stat-row">
+<div class="stat-box"><div class="num">16</div><div class="label">CHANGED</div></div>
+<div class="stat-box"><div class="num">324</div><div class="label">ADDED</div></div>
+<div class="stat-box"><div class="num">269</div><div class="label">REMOVED</div></div>
+<div class="stat-box critical"><div class="num">4</div><div class="label">CRITICAL</div></div>
+<div class="stat-box high"><div class="num">5</div><div class="label">HIGH</div></div>
+<div class="stat-box medium"><div class="num">8</div><div class="label">MEDIUM</div></div>
+<div class="stat-box low"><div class="num">10</div><div class="label">LOW</div></div>
+</div>
+<p style="margin-top:12px;color:#c9d1d9;">
+<strong>Key finding:</strong> New swap algorithm <code>BOOT_SWAP_USING_OFFSET</code> is now the default preference for Nordic SoCs. <code>BOOT_PREFER_SWAP_MOVE</code> lost its <code>default y if SOC_FAMILY_NORDIC_NRF</code>. Currently overridden by sysbuild (<code>SB_CONFIG_MCUBOOT_MODE_SWAP_USING_MOVE=y</code>), but a latent risk if sysbuild config changes.
+</p>
+<p style="margin-top:8px;color:#c9d1d9;">
+Key themes: <strong>Swap algorithm default change</strong> (MOVE&rarr;OFFSET preference), <strong>C library migration</strong> (minimal_libc&rarr;picolibc with IO_MINIMAL), <strong>Crypto path unchanged</strong> (CC310 BL still used, same code path), <strong>DCDC &rarr; devicetree</strong>, <strong>New security features</strong> (TLV allow-list, FORTIFY_SOURCE, RAM cleanup option), <strong>SUIT infrastructure removed</strong>.
+</p>
+</div>
+
+<div class="action-items">
+<h3>Action Items (Must Verify)</h3>
+
+<div class="action-item"><span class="badge critical">CRITICAL</span> <span class="tag new-algo">NEW ALGORITHM</span> <strong>Swap Algorithm Default Change</strong>: <code>BOOT_PREFER_SWAP_MOVE</code> lost <code>default y if SOC_FAMILY_NORDIC_NRF</code>. New <code>BOOT_PREFER_SWAP_OFFSET</code> defaults to y. Currently safe because sysbuild forces <code>SB_CONFIG_MCUBOOT_MODE_SWAP_USING_MOVE=y</code>, but if sysbuild config changes, MCUboot would silently switch to swap-using-offset (different secondary slot layout: image at sector+1). <strong>Explicitly pin <code>CONFIG_BOOT_SWAP_USING_MOVE=y</code> in MCUboot prj.conf.</strong></div>
+
+<div class="action-item"><span class="badge critical">CRITICAL</span> <strong>Picolibc IO_MINIMAL</strong>: <code>%02x</code> &rarr; <code>"a"</code> not <code>"0a"</code>. MCUboot uses LOG_INF for boot diagnostics. If any MCUboot log or custom code uses zero-padded hex, output will be wrong. Use <code>bin2hex()</code> for hex encoding or set <code>PICOLIBC_IO_INTEGER=y</code>.</div>
+
+<div class="action-item"><span class="badge critical">CRITICAL</span> <span class="tag sdk-default">SDK DEFAULT</span> <strong>COMMON_LIBC_MALLOC_ARENA_SIZE</strong>: With picolibc, the default is <code>-1</code> (ALL remaining SRAM for malloc). v64 config correctly sets <code>=0</code>, but if this line is ever removed from MCUboot conf, malloc would consume all RAM in a 48KB bootloader. <strong>Ensure <code>=0</code> is pinned in MCUboot prj.conf.</strong></div>
+
+<div class="action-item"><span class="badge critical">CRITICAL</span> <strong>MCUboot Mode Rename</strong>: <code>MCUBOOT_BOOTLOADER_MODE_SWAP_WITHOUT_SCRATCH</code> &rarr; <code>SWAP_USING_MOVE</code>. Update any <code>#ifdef</code> in app code referencing old symbol.</div>
+
+<div class="action-item"><span class="badge high">HIGH</span> <strong>Signing Key Path</strong>: <code>"root-ec-p256.pem"</code> &rarr; <code>"keys/signing_key.pem"</code>. Verify key exists at build time and matches MCUboot public key hash.</div>
+
+<div class="action-item"><span class="badge high">HIGH</span> <strong>BOOT_PREFER_SWAP_OFFSET=y (new preference)</strong>: The swap-offset algorithm is new (swap_offset.c, copyright 2025 Nordic). It uses a different secondary slot layout (image at sector+1, not sector+0). <code>imgtool</code> must be aware. Currently overridden by explicit <code>BOOT_SWAP_USING_MOVE=y</code>, but verify OTA infrastructure.</div>
+
+<div class="action-item"><span class="badge high">HIGH</span> <strong>CBPRINTF_LIBC_SUBSTS y&rarr;n</strong>: Tied to picolibc migration. <code>snprintk</code> now maps to picolibc's <code>snprintf</code> directly, not cbprintf. Combined with IO_MINIMAL, formatting behavior changes.</div>
+
+<div class="action-item"><span class="badge medium">MEDIUM</span> <strong>MCUBOOT_USE_TLV_ALLOW_LIST=y</strong>: New default. Images with non-standard TLVs will be rejected. Verify <code>imgtool</code> output matches allowed TLVs.</div>
+
+<div class="action-item"><span class="badge medium">MEDIUM</span> <strong>DC/DC Regulator</strong>: <code>BOARD_ENABLE_DCDC</code> removed, <code>SOC_DCDC_NRF52X</code> deprecated. custom_board board DTS must include regulator nodes with <code>regulator-initial-mode = &lt;NRF5X_REG_MODE_DCDC&gt;</code>.</div>
+</div>
+
+<input type="text" class="search-box" id="searchBox" placeholder="Search configs... (e.g., SWAP, PICOLIBC, CC310, SIGNATURE)" oninput="filterConfigs()">
+
+<div class="filter-bar">
+<button class="filter-btn active" onclick="filterByRisk('all', this)">All</button>
+<button class="filter-btn" onclick="filterByRisk('critical', this)">Critical</button>
+<button class="filter-btn" onclick="filterByRisk('high', this)">High</button>
+<button class="filter-btn" onclick="filterByRisk('medium', this)">Medium</button>
+<button class="filter-btn" onclick="filterByRisk('low', this)">Low</button>
+<button class="filter-btn" onclick="filterByRisk('none', this)">None</button>
+</div>
+
+<!-- ==================== SECTION 1: SWAP ALGORITHM ==================== -->
+<div class="section" id="sec-swap">
+<div class="section-header" onclick="toggleSection(this)">
+<span><span class="arrow">&#9660;</span> Section 1: Swap Algorithm &amp; Boot Mechanism</span>
+<span style="color:#8b949e">2 CRITICAL, 2 HIGH, 2 MEDIUM</span>
+</div>
+<div class="section-body">
+
+<div class="config-entry" data-risk="critical" data-text="CONFIG_BOOT_PREFER_SWAP_MOVE CONFIG_BOOT_PREFER_SWAP_OFFSET swap algorithm default change nordic nrf sdk">
+<span class="config-name">BOOT_PREFER_SWAP_MOVE &rarr; BOOT_PREFER_SWAP_OFFSET</span> <span class="badge critical">CRITICAL</span> <span class="tag boot">BOOT</span> <span class="tag sdk-default">SDK DEFAULT CHANGE</span> <span class="tag new-algo">NEW ALGORITHM</span>
+<div class="config-values"><span class="val-old">BOOT_PREFER_SWAP_MOVE: default y if SOC_FAMILY_NORDIC_NRF</span><span class="val-arrow">&rarr;</span><span class="val-new">BOOT_PREFER_SWAP_OFFSET: default y if !scratch &amp;&amp; !STM32 (MOVE loses NRF default)</span></div>
+<div class="config-desc"><strong>Swap algorithm default changed for Nordic SoCs.</strong> In v2.7.0, <code>BOOT_PREFER_SWAP_MOVE</code> had <code>default y if SOC_FAMILY_NORDIC_NRF</code> (Kconfig line 203). In v3.2.2, this default was <strong>removed</strong>, and <code>depends on !BOOT_PREFER_SWAP_OFFSET</code> was added (line 579). New <code>BOOT_PREFER_SWAP_OFFSET</code> (line 571) defaults to y when no scratch partition is defined. Since the swap-mode choice defaults to <code>BOOT_SWAP_USING_OFFSET if BOOT_PREFER_SWAP_OFFSET</code>, a build without explicit mode setting would get the new offset algorithm.</div>
+<div class="config-source">Kconfig: <code>bootloader/mcuboot/boot/zephyr/Kconfig:203</code> (v2.7.0) &rarr; <code>:571-579</code> (v3.2.2). BOOT_SWAP_USING_OFFSET: <code>:611-620</code> (v3.2.2 only).</div>
+<div class="config-why"><strong>Current state:</strong> Safe — sysbuild forces <code>SB_CONFIG_MCUBOOT_MODE_SWAP_USING_MOVE=y</code> which overrides the preference. <strong>Action:</strong> Pin <code>CONFIG_BOOT_SWAP_USING_MOVE=y</code> in MCUboot prj.conf as defense-in-depth.</div>
+</div>
+
+<div class="config-entry" data-risk="critical" data-text="CONFIG_MCUBOOT_BOOTLOADER_MODE_SWAP_WITHOUT_SCRATCH mcuboot swap move dfu ota deprecated rename">
+<span class="config-name">MCUBOOT_BOOTLOADER_MODE_SWAP_WITHOUT_SCRATCH &rarr; SWAP_USING_MOVE</span> <span class="badge critical">CRITICAL</span> <span class="tag boot">BOOT</span>
+<div class="config-values"><span class="val-old">SWAP_WITHOUT_SCRATCH=y</span><span class="val-arrow">&rarr;</span><span class="val-new">SWAP_USING_MOVE=y</span></div>
+<div class="config-desc"><strong>DEPRECATED rename.</strong> Same underlying swap algorithm, new Kconfig name. App-side config and any <code>#ifdef</code> referencing old symbol must be updated.</div>
+</div>
+
+<div class="config-entry" data-risk="high" data-text="CONFIG_BOOT_PREFER_SWAP_OFFSET swap offset new algorithm secondary slot layout">
+<span class="config-name">CONFIG_BOOT_PREFER_SWAP_OFFSET=y (new)</span> <span class="badge high">HIGH</span> <span class="tag boot">BOOT</span> <span class="tag new-algo">NEW ALGORITHM</span>
+<div class="config-values"><span class="val-old">not present</span><span class="val-arrow">&rarr;</span><span class="val-new">y</span></div>
+<div class="config-desc"><strong>New swap algorithm preference.</strong> swap-using-offset (<code>swap_offset.c</code>, copyright 2025 Nordic) moves sector X+1&rarr;X instead of shift-up. Firmware in secondary slot must be at <strong>sector+1 offset</strong>, not sector 0. Fewer flash writes, faster swap. Currently a preference only — actual mode is <code>BOOT_SWAP_USING_MOVE=y</code> via sysbuild.</div>
+<div class="config-source">Kconfig: <code>bootloader/mcuboot/boot/zephyr/Kconfig:571</code> (v3.2.2 only). Impl: <code>boot/bootutil/src/swap_offset.c</code>.</div>
+</div>
+
+<div class="config-entry" data-risk="high" data-text="CONFIG_BOOT_IMG_HASH_ALG_SHA256 sha256 hash algorithm selection explicit">
+<span class="config-name">BOOT_IMG_HASH_ALG_SHA256=y (new explicit)</span> <span class="badge high">HIGH</span> <span class="tag boot">BOOT</span> <span class="tag crypto">CRYPTO</span>
+<div class="config-values"><span class="val-old">implicit (SHA256 only)</span><span class="val-arrow">&rarr;</span><span class="val-new">explicit choice: SHA256/SHA384/SHA512</span></div>
+<div class="config-desc">v3.2.2 introduces formal hash algorithm choice. <code>BOOT_SIGNATURE_TYPE_ECDSA_P256</code> selects <code>BOOT_IMG_HASH_ALG_SHA256_ALLOW</code> (line 281), which defaults the choice to SHA256. Same outcome as v2.7.0 but now extensible.</div>
+<div class="config-source">Kconfig: <code>bootloader/mcuboot/boot/zephyr/Kconfig:171-218</code> (v3.2.2). Hidden helper: <code>BOOT_SOMETHING_USES_SHA256</code> (line 147).</div>
+<div class="config-why"><strong>For ECDSA-P256:</strong> No behavioral change. SHA256 was hardcoded before, now explicit.</div>
+</div>
+
+<div class="config-entry" data-risk="medium" data-text="CONFIG_MCUBOOT_USE_TLV_ALLOW_LIST tlv validation security">
+<span class="config-name">MCUBOOT_USE_TLV_ALLOW_LIST=y (new)</span> <span class="badge medium">MEDIUM</span> <span class="tag boot">BOOT</span> <span class="tag security">SECURITY</span>
+<div class="config-values"><span class="val-old">not present</span><span class="val-arrow">&rarr;</span><span class="val-new">y (default)</span></div>
+<div class="config-desc">Validates unprotected TLVs against compiled-in allow list. Images with unexpected TLV types rejected. Security hardening. Could reject images if signing tools include non-standard TLVs.</div>
+<div class="config-source">Kconfig: <code>bootloader/mcuboot/boot/zephyr/Kconfig:1303</code> (v3.2.2 only). <code>default y</code>.</div>
+</div>
+
+<div class="config-entry" data-risk="medium" data-text="CONFIG_MCUBOOT_STORAGE_WITH_ERASE flash erase explicit">
+<span class="config-name">MCUBOOT_STORAGE_WITH_ERASE=y (new)</span> <span class="badge medium">MEDIUM</span> <span class="tag boot">BOOT</span> <span class="tag flash">FLASH</span>
+<div class="config-values"><span class="val-old">implicit (always erase)</span><span class="val-arrow">&rarr;</span><span class="val-new">explicit: depends on FLASH_HAS_EXPLICIT_ERASE</span></div>
+<div class="config-desc">v3.2.2 introduces explicit erase/no-erase support (for RRAM/MRAM devices). On nRF52840 NOR flash, <code>FLASH_HAS_EXPLICIT_ERASE=y</code> auto-selects this. Maps to <code>MCUBOOT_SUPPORT_DEV_WITH_ERASE</code> in mcuboot_config.h.</div>
+<div class="config-source">Kconfig: <code>bootloader/mcuboot/boot/zephyr/Kconfig:1363</code>. <code>depends on FLASH_HAS_EXPLICIT_ERASE</code>, <code>default y</code>.</div>
+</div>
+
+<div class="config-entry" data-risk="low" data-text="CONFIG_BOOT_WATCHDOG_FEED_NRFX_WDT watchdog nrf swap prevent brick">
+<span class="config-name">BOOT_WATCHDOG_FEED_NRFX_WDT=y (new)</span> <span class="badge low">LOW</span> <span class="tag boot">BOOT</span> <span class="tag hw">HW</span>
+<div class="config-values"><span class="val-old">inline imply NRFX_WDT0/WDT1/WDT30/WDT31</span><span class="val-arrow">&rarr;</span><span class="val-new">dedicated config, imply NRFX_WDT</span></div>
+<div class="config-desc">Refactored watchdog feeding. v2.7.0 used individual <code>imply NRFX_WDTx</code> with NRFX driver instances. v3.2.2 uses a single <code>BOOT_WATCHDOG_FEED_NRFX_WDT</code> config that accesses WDT hardware registers directly (NRF_WDT0). Functionally equivalent, more reliable.</div>
+<div class="config-source">Kconfig: v2.7.0 <code>:664-673</code>. v3.2.2 <code>:1221-1234</code>.</div>
+</div>
+
+<div class="config-entry" data-risk="low" data-text="CONFIG_BOOT_MAX_IMG_SECTORS_AUTO auto calculate sectors">
+<span class="config-name">BOOT_MAX_IMG_SECTORS_AUTO=n (new)</span> <span class="badge low">LOW</span> <span class="tag boot">BOOT</span>
+<div class="config-values"><span class="val-old">not present</span><span class="val-arrow">&rarr;</span><span class="val-new">n (default y if !PARTITION_MANAGER)</span></div>
+<div class="config-desc">Auto-calculates max sectors from flash/partition sizes. Defaults to off when Partition Manager is used (your config). <code>BOOT_MAX_IMG_SECTORS=128</code> continues to work. Would auto-calculate if PM is dropped.</div>
+<div class="config-source">Kconfig: <code>bootloader/mcuboot/boot/zephyr/Kconfig:856</code> (v3.2.2 only).</div>
+</div>
+
+<div class="config-entry" data-risk="low" data-text="CONFIG_SIGN_IMAGES removed sysbuild implicit signing">
+<span class="config-name">CONFIG_SIGN_IMAGES=y (removed)</span> <span class="badge low">LOW</span> <span class="tag build">BUILD</span>
+<div class="config-values"><span class="val-old">y</span><span class="val-arrow">&rarr;</span><span class="val-new">removed (implicit in sysbuild)</span></div>
+<div class="config-desc">Explicit image signing toggle removed. In v3.2.2 with sysbuild, signing is automatic when signature type/key are configured.</div>
+</div>
+
+</div></div>
+
+<!-- ==================== SECTION 2: C LIBRARY ==================== -->
+<div class="section" id="sec-libc">
+<div class="section-header" onclick="toggleSection(this)">
+<span><span class="arrow">&#9660;</span> Section 2: C Library Migration (minimal_libc &rarr; picolibc)</span>
+<span style="color:#8b949e">2 CRITICAL, 1 HIGH</span>
+</div>
+<div class="section-body">
+
+<div class="config-entry" data-risk="critical" data-text="CONFIG_MINIMAL_LIBC CONFIG_PICOLIBC libc migration picolibc io_minimal printf %02x">
+<span class="config-name">MINIMAL_LIBC=y &rarr; PICOLIBC=y + PICOLIBC_IO_MINIMAL=y</span> <span class="badge critical">CRITICAL</span> <span class="tag libc">LIBC</span>
+<div class="config-values"><span class="val-old">MINIMAL_LIBC=y</span><span class="val-arrow">&rarr;</span><span class="val-new">PICOLIBC=y, IO_MINIMAL=y</span></div>
+<div class="config-desc"><strong>C library changed.</strong> NCS 3.x default is picolibc. With <code>PICOLIBC_IO_MINIMAL=y</code> (triggered by <code>CBPRINTF_NANO=y</code> via Kconfig default chain at <code>picolibc/Kconfig:33</code>), printf <strong>loses width/padding</strong>: <code>%02x</code> with 0x0A &rarr; <code>"a"</code> not <code>"0a"</code>. MCUboot logs use <code>LOG_INF</code> which goes through picolibc printf.</div>
+<div class="config-source">Kconfig: <code>zephyr/lib/libc/Kconfig</code> choice LIBC_IMPLEMENTATION. <code>picolibc/Kconfig:31-66</code> IO level hierarchy. Fix: <code>CONFIG_PICOLIBC_IO_INTEGER=y</code> restores formatting.</div>
+<div class="config-why"><strong>Impact on MCUboot:</strong> Boot logs with hex values (image version, hash fragments, slot info) may show wrong formatting. Not functionally breaking but complicates debugging. Already documented in MEMORY.md as known RCA for BLE pairing failure.</div>
+</div>
+
+<div class="config-entry" data-risk="critical" data-text="CONFIG_COMMON_LIBC_MALLOC_ARENA_SIZE malloc heap picolibc mcuboot ram sdk default">
+<span class="config-name">COMMON_LIBC_MALLOC_ARENA_SIZE</span> <span class="badge critical">CRITICAL</span> <span class="tag libc">LIBC</span> <span class="tag sdk-default">SDK DEFAULT 0&rarr;-1</span>
+<div class="config-values"><span class="val-old">implicit 0 (via MINIMAL_LIBC default)</span><span class="val-arrow">&rarr;</span><span class="val-new">explicit 0 (must be set!)</span></div>
+<div class="config-desc"><strong>Libc default change.</strong> With MINIMAL_LIBC, the Kconfig had <code>default 0 if MINIMAL_LIBC</code>. With PICOLIBC, that default no longer applies &mdash; fallback is <code>-1</code> (ALL remaining SRAM for malloc). v64 config correctly sets <code>=0</code>. If this explicit setting is ever removed, MCUboot would allocate all remaining RAM to malloc heap in a 48KB partition.</div>
+<div class="config-source">Kconfig: <code>zephyr/lib/libc/common/Kconfig</code>. <code>default 0 if MINIMAL_LIBC</code> &mdash; no equivalent default for PICOLIBC.</div>
+<div class="config-why"><strong>Action:</strong> Pin <code>CONFIG_COMMON_LIBC_MALLOC_ARENA_SIZE=0</code> in MCUboot prj.conf. Document why.</div>
+</div>
+
+<div class="config-entry" data-risk="high" data-text="CONFIG_CBPRINTF_LIBC_SUBSTS cbprintf libc picolibc">
+<span class="config-name">CBPRINTF_LIBC_SUBSTS</span> <span class="badge high">HIGH</span> <span class="tag libc">LIBC</span>
+<div class="config-values"><span class="val-old">y</span><span class="val-arrow">&rarr;</span><span class="val-new">n</span></div>
+<div class="config-desc">With MINIMAL_LIBC, cbprintf replaced libc printf via <code>imply CBPRINTF_LIBC_SUBSTS if MINIMAL_LIBC</code> (from CBPRINTF_NANO). With picolibc, its own printf is used natively. Combined with IO_MINIMAL, <code>snprintk</code> (which is <code>#define</code>'d to picolibc's <code>snprintf</code>) loses formatting.</div>
+<div class="config-source">Kconfig: <code>zephyr/lib/os/Kconfig.cbprintf:19</code>. Imply chain breaks when MINIMAL_LIBC not used.</div>
+</div>
+
+<div class="config-entry" data-risk="low" data-text="CONFIG_COMPILER_FREESTANDING freestanding picolibc hosted">
+<span class="config-name">COMPILER_FREESTANDING</span> <span class="badge low">LOW</span> <span class="tag libc">LIBC</span>
+<div class="config-values"><span class="val-old">y</span><span class="val-arrow">&rarr;</span><span class="val-new">n</span></div>
+<div class="config-desc">Freestanding mode (<code>-ffreestanding</code>) no longer needed because picolibc provides a full hosted C environment. <code>MINIMAL_LIBC imply COMPILER_FREESTANDING</code> no longer applies.</div>
+</div>
+
+<div class="config-entry" data-risk="low" data-text="CONFIG_THREAD_LOCAL_STORAGE tls picolibc">
+<span class="config-name">THREAD_LOCAL_STORAGE</span> <span class="badge low">LOW</span> <span class="tag libc">LIBC</span>
+<div class="config-values"><span class="val-old">n</span><span class="val-arrow">&rarr;</span><span class="val-new">y</span></div>
+<div class="config-desc">TLS enabled by picolibc (<code>PICOLIBC_USE_TOOLCHAIN selects TLS</code>). MCUboot is single-threaded. Minimal code bloat only.</div>
+</div>
+
+<div class="config-entry" data-risk="none" data-text="CONFIG_MINIMAL_LIBC removed configs calloc malloc reallocarray">
+<span class="config-name">MINIMAL_LIBC_* (13 configs removed)</span> <span class="badge none">NONE</span> <span class="tag libc">LIBC</span>
+<div class="config-desc">CALLOC, MALLOC, REALLOCARRAY, OPTIMIZE_STRING_FOR_SIZE, TIME, etc. All replaced by picolibc's native implementations.</div>
+</div>
+
+</div></div>
+
+<!-- ==================== SECTION 3: CRYPTO ==================== -->
+<div class="section" id="sec-crypto">
+<div class="section-header" onclick="toggleSection(this)">
+<span><span class="arrow">&#9660;</span> Section 3: Crypto &amp; Security</span>
+<span style="color:#8b949e">0 CRITICAL, 1 HIGH, 4 MEDIUM</span>
+</div>
+<div class="section-body">
+
+<div class="config-entry" data-risk="high" data-text="CONFIG_BOOT_SIGNATURE_KEY_FILE signing key pem path">
+<span class="config-name">BOOT_SIGNATURE_KEY_FILE</span> <span class="badge high">HIGH</span> <span class="tag crypto">CRYPTO</span>
+<div class="config-values"><span class="val-old">"root-ec-p256.pem"</span><span class="val-arrow">&rarr;</span><span class="val-new">".../keys/signing_key.pem"</span></div>
+<div class="config-desc">Signing key path changed from MCUboot default to project-specific private key. Verify key exists, not in VCS, and matches MCUboot's compiled-in public key hash.</div>
+</div>
+
+<div class="config-entry" data-risk="medium" data-text="CONFIG_FORTIFY_SOURCE_COMPILE_TIME security buffer overflow">
+<span class="config-name">FORTIFY_SOURCE_COMPILE_TIME</span> <span class="badge medium">MEDIUM</span> <span class="tag security">SECURITY</span>
+<div class="config-values"><span class="val-old">NONE=y</span><span class="val-arrow">&rarr;</span><span class="val-new">COMPILE_TIME=y</span></div>
+<div class="config-desc"><code>-D_FORTIFY_SOURCE=1</code> enabled. Catches unsafe buffer operations at compile time. Zero runtime cost. The Kconfig choice was available in v2.7.0 but defaulted to NONE when MINIMAL_LIBC was used. Picolibc allows it.</div>
+<div class="config-source">Kconfig: <code>zephyr/Kconfig.zephyr:565-595</code>. <code>default FORTIFY_SOURCE_NONE if MINIMAL_LIBC</code> (removed condition).</div>
+</div>
+
+<div class="config-entry" data-risk="medium" data-text="CONFIG_MCUBOOT_CLEANUP_RAM security ram zeroing secret leakage">
+<span class="config-name">MCUBOOT_CLEANUP_RAM=n (new)</span> <span class="badge medium">MEDIUM</span> <span class="tag security">SECURITY</span>
+<div class="config-values"><span class="val-old">not present</span><span class="val-arrow">&rarr;</span><span class="val-new">n</span></div>
+<div class="config-desc"><strong>New security feature.</strong> When enabled, zeros ALL RAM before jumping to application. Prevents bootloader secrets (signature verification intermediates, key material) from being readable by app. Works on Cortex-M4 (nRF52840). Not enabled by default.</div>
+<div class="config-source">Kconfig: <code>bootloader/mcuboot/boot/zephyr/Kconfig:502</code>. <code>depends on CPU_CORTEX_M4 || CPU_CORTEX_M33</code>. Impl: <code>main.c:254-280</code> &mdash; <code>__ramfunc jump_in()</code> zeros RAM before branch.</div>
+<div class="config-why"><strong>Consider enabling</strong> for defense-in-depth. Adds boot latency (zeroing 256KB RAM). v2.7.0 only had <code>MCUBOOT_NRF_CLEANUP_NONSECURE_RAM</code> for TrustZone devices (not nRF52840).</div>
+</div>
+
+<div class="config-entry" data-risk="medium" data-text="CONFIG_MBEDTLS_CFG_FILE mcuboot-mbedtls-cfg crypto backend conditional">
+<span class="config-name">MBEDTLS_CFG_FILE</span> <span class="badge medium">MEDIUM</span> <span class="tag crypto">CRYPTO</span>
+<div class="config-values"><span class="val-old">"mcuboot-mbedtls-cfg.h" (unconditional)</span><span class="val-arrow">&rarr;</span><span class="val-new">removed (conditional on TinyCrypt/mbedTLS only)</span></div>
+<div class="config-desc">v2.7.0 unconditionally set this default (line 170). v3.2.2 makes it conditional: only when <code>BOOT_USE_TINYCRYPT</code> or <code>BOOT_USE_MBEDTLS &amp;&amp; !MBEDTLS_BUILTIN</code> (lines 536-541). CC310 BL path does NOT use mbedTLS, so this header is no longer included. <strong>Crypto path unchanged</strong> &mdash; CC310 BL library handles ECDSA-P256 directly.</div>
+<div class="config-source">Kconfig: <code>bootloader/mcuboot/boot/zephyr/Kconfig:170</code> (v2.7.0) &rarr; <code>:536-541</code> (v3.2.2).</div>
+</div>
+
+<div class="config-entry" data-risk="medium" data-text="CONFIG_BOOT_BYPASS_KEY_MATCH security key hash bypass">
+<span class="config-name">BOOT_BYPASS_KEY_MATCH=n (new)</span> <span class="badge medium">MEDIUM</span> <span class="tag security">SECURITY</span>
+<div class="config-values"><span class="val-old">not present</span><span class="val-arrow">&rarr;</span><span class="val-new">n</span></div>
+<div class="config-desc">When enabled, skips TLV key hash matching against compiled-in key. Signature verification still occurs. Minor optimization for single-key setups. <strong>Must remain =n</strong> in production with multiple key support.</div>
+<div class="config-source">Kconfig: <code>bootloader/mcuboot/boot/zephyr/Kconfig:387</code>. <code>depends on !BOOT_HW_KEY</code>.</div>
+</div>
+
+<div class="config-entry" data-risk="low" data-text="CONFIG_BOOT_ECDSA_CC310 cc310 crypto path unchanged">
+<span class="config-name">BOOT_ECDSA_CC310=y (unchanged)</span> <span class="badge low">LOW</span> <span class="tag crypto">CRYPTO</span>
+<div class="config-desc"><strong>CC310 BL crypto path is functionally identical in both versions.</strong> Same selects: <code>BOOT_USE_NRF_CC310_BL</code>, <code>NRF_CC310_BL</code>, <code>NRFXLIB_CRYPTO</code>, <code>BOOT_USE_CC310</code>. NCS overlay still forces CC310 when <code>HAS_HW_NRF_CC310</code>. v3.2.2 adds <code>BOOT_ECDSA_PSA</code> as alternative (only when NRF_SECURITY=y).</div>
+<div class="config-source">Kconfig: <code>bootloader/mcuboot/boot/zephyr/Kconfig:107-114</code> (v2.7.0) &rarr; <code>:293-299</code> (v3.2.2). Identical definition.</div>
+</div>
+
+<div class="config-entry" data-risk="low" data-text="CONFIG_BOOT_KEYS_REVOCATION kmu nrf54 key rotation">
+<span class="config-name">BOOT_KEYS_REVOCATION=n (new)</span> <span class="badge low">LOW</span> <span class="tag security">SECURITY</span>
+<div class="config-desc">KMU-based key rotation/revocation. Only for nRF54L/nRF54H with CRACEN. Not applicable to nRF52840.</div>
+<div class="config-source">Kconfig: <code>bootloader/mcuboot/boot/zephyr/Kconfig:437</code>. <code>depends on BOOT_SIGNATURE_USING_KMU</code>.</div>
+</div>
+
+<div class="config-entry" data-risk="low" data-text="CONFIG_NRF_SECURITY_ENABLER nrf security auto enable mcuboot">
+<span class="config-name">NRF_SECURITY_ENABLER=y (new)</span> <span class="badge low">LOW</span> <span class="tag crypto">CRYPTO</span>
+<div class="config-desc">App-level auto-enabler for NRF_SECURITY when BT crypto is needed. <code>def_bool y</code> but <code>imply NRF_SECURITY</code> conditions (BT_CRYPTO, etc.) are not met in MCUboot. No effect on MCUboot crypto path.</div>
+<div class="config-source">Kconfig: <code>nrf/Kconfig.nrf:116-122</code> (v3.2.2 only).</div>
+</div>
+
+<div class="config-entry" data-risk="none" data-text="CONFIG_SB_VALIDATION_STRUCT secure boot hash public key">
+<span class="config-name">SB_VALIDATION_STRUCT_HAS_HASH/PUBLIC_KEY=y (new)</span> <span class="badge none">NONE</span> <span class="tag security">SECURITY</span>
+<div class="config-desc">Secure Boot validation struct includes hash and public key. Default=y for ECDSA-P256.</div>
+</div>
+
+<div class="config-entry" data-risk="none" data-text="CONFIG_CSPRNG_AVAILABLE entropy rng hardware">
+<span class="config-name">CSPRNG_AVAILABLE=y (new)</span> <span class="badge none">NONE</span> <span class="tag crypto">CRYPTO</span>
+<div class="config-desc">Platform has CSPRNG from <code>zephyr,entropy</code> DT chosen. Replaces <code>DT_HAS_ZEPHYR_BT_HCI_ENTROPY_ENABLED</code>.</div>
+</div>
+
+</div></div>
+
+<!-- ==================== SECTION 4: SYSTEM/KERNEL ==================== -->
+<div class="section" id="sec-kernel">
+<div class="section-header" onclick="toggleSection(this)">
+<span><span class="arrow">&#9660;</span> Section 4: System / Kernel / Hardware</span>
+<span style="color:#8b949e">0 CRITICAL, 1 HIGH, 2 MEDIUM, 5 LOW</span>
+</div>
+<div class="section-body">
+
+<div class="config-entry" data-risk="high" data-text="CONFIG_BOARD_ENABLE_DCDC CONFIG_SOC_DCDC_NRF52X dcdc regulator devicetree deprecated">
+<span class="config-name">BOARD_ENABLE_DCDC/DCDC_HV + SOC_DCDC_NRF52X/HV (removed/deprecated)</span> <span class="badge high">HIGH</span> <span class="tag hw">HW</span>
+<div class="config-values"><span class="val-old">BOARD_ENABLE_DCDC=y, DCDC_HV=y</span><span class="val-arrow">&rarr;</span><span class="val-new">removed (DT regulators)</span></div>
+<div class="config-desc"><strong>DCDC migrated to devicetree.</strong> <code>SOC_DCDC_NRF52X</code> now <code>select DEPRECATED</code> (v3.2.2 <code>soc/nordic/nrf52/Kconfig:34</code>). Board DTS must define <code>reg0</code> (HV DCDC: <code>nordic,nrf52x-regulator-hv</code>) and <code>reg1</code> (core: <code>nordic,nrf5x-regulator</code>) with <code>regulator-initial-mode = &lt;NRF5X_REG_MODE_DCDC&gt;</code>. New DT nodes: <code>DT_HAS_NORDIC_NRF52X_REGULATOR_HV_ENABLED</code>, <code>DT_HAS_NORDIC_NRF5X_REGULATOR_ENABLED</code>. Without it &rarr; 2-3x higher current in MCUboot phase too.</div>
+</div>
+
+<div class="config-entry" data-risk="medium" data-text="CONFIG_NCS_MCUBOOT_IMG_VALIDATE_ATTEMPT_COUNT validation retry">
+<span class="config-name">NCS_MCUBOOT_IMG_VALIDATE_ATTEMPT_COUNT=1 (new)</span> <span class="badge medium">MEDIUM</span> <span class="tag boot">BOOT</span>
+<div class="config-values"><span class="val-old">not present</span><span class="val-arrow">&rarr;</span><span class="val-new">1</span></div>
+<div class="config-desc">Number of image validation attempts. With count=1, a single failed validation erases the image. Consider increasing for field reliability (transient flash errors).</div>
+<div class="config-source">Kconfig: <code>bootloader/mcuboot/boot/zephyr/Kconfig:1481</code>.</div>
+</div>
+
+<div class="config-entry" data-risk="medium" data-text="CONFIG_NCS_MCUBOOT_IN_BUILD sysbuild child-image build system">
+<span class="config-name">NCS_MCUBOOT_IN_BUILD</span> <span class="badge medium">MEDIUM</span> <span class="tag build">BUILD</span>
+<div class="config-values"><span class="val-old">y</span><span class="val-arrow">&rarr;</span><span class="val-new">n</span></div>
+<div class="config-desc">Read-only helper flag. v2.7.0 child-image: "MCUboot is in build". v3.2.2 sysbuild: handled by <code>SB_CONFIG_BOOTLOADER_MCUBOOT=y</code>. Any <code>#ifdef NCS_MCUBOOT_IN_BUILD</code> in app code may need updating.</div>
+</div>
+
+<div class="config-entry" data-risk="low" data-text="CONFIG_PLATFORM_SPECIFIC_INIT CONFIG_SOC_RESET_HOOK deprecated">
+<span class="config-name">PLATFORM_SPECIFIC_INIT &rarr; SOC_RESET_HOOK</span> <span class="badge low">LOW</span> <span class="tag kernel">KERNEL</span>
+<div class="config-values"><span class="val-old">PLATFORM_SPECIFIC_INIT=y</span><span class="val-arrow">&rarr;</span><span class="val-new">SOC_RESET_HOOK=y</span></div>
+<div class="config-desc">DEPRECATED in v3.2.2 (<code>select DEPRECATED</code>). <code>z_arm_platform_init()</code> renamed to <code>soc_reset_hook()</code>. Nordic SOC Kconfig changed from <code>select PLATFORM_SPECIFIC_INIT if ARM</code> to <code>select SOC_RESET_HOOK</code> (unconditional).</div>
+<div class="config-source">Kconfig: <code>zephyr/arch/arm/core/Kconfig:169</code> (deprecated). <code>zephyr/kernel/Kconfig.init:31</code> (new).</div>
+</div>
+
+<div class="config-entry" data-risk="low" data-text="CONFIG_SCHED_DUMB SCHED_SIMPLE rename mcuboot single-threaded">
+<span class="config-name">SCHED_DUMB/WAITQ_DUMB &rarr; SCHED_SIMPLE/WAITQ_SIMPLE</span> <span class="badge low">LOW</span> <span class="tag kernel">KERNEL</span>
+<div class="config-desc">Pure rename. MCUboot is single-threaded (<code>MULTITHREADING=n</code>). Scheduler irrelevant.</div>
+</div>
+
+<div class="config-entry" data-risk="low" data-text="CONFIG_DEVICE_DEINIT_SUPPORT new default y function pointer">
+<span class="config-name">DEVICE_DEINIT_SUPPORT=y (new)</span> <span class="badge low">LOW</span> <span class="tag kernel">KERNEL</span>
+<div class="config-values"><span class="val-old">not present</span><span class="val-arrow">&rarr;</span><span class="val-new">y (default)</span></div>
+<div class="config-desc">Adds deinit function pointer to every <code>struct device</code>. +4 bytes per device. MCUboot has few devices. Also triggers <code>PINCTRL_KEEP_SLEEP_STATE=y</code> via default chain. Consider =n to save space in 48KB partition.</div>
+<div class="config-source">Kconfig: <code>zephyr/kernel/Kconfig.device:36</code>. <code>default y</code>.</div>
+</div>
+
+<div class="config-entry" data-risk="low" data-text="CONFIG_PINCTRL_KEEP_SLEEP_STATE pinctrl sleep state mcuboot">
+<span class="config-name">PINCTRL_KEEP_SLEEP_STATE=y (new)</span> <span class="badge low">LOW</span> <span class="tag hw">HW</span>
+<div class="config-values"><span class="val-old">not present</span><span class="val-arrow">&rarr;</span><span class="val-new">y</span></div>
+<div class="config-desc">Retains pin sleep states in memory after init. <code>default y if PM || PM_DEVICE || DEVICE_DEINIT_SUPPORT</code>. Small RAM cost per pinctrl device. In MCUboot, affects SPI/QSPI pins. Consider =n to save space.</div>
+<div class="config-source">Kconfig: <code>zephyr/drivers/pinctrl/Kconfig:37</code> (v3.2.2 only).</div>
+</div>
+
+<div class="config-entry" data-risk="low" data-text="CONFIG_SEGGER_RTT_SECTION rtt buffer custom section">
+<span class="config-name">SEGGER_RTT_SECTION_NONE &rarr; SECTION_CUSTOM=".rtt_buff_data"</span> <span class="badge low">LOW</span> <span class="tag kernel">KERNEL</span>
+<div class="config-desc">RTT buffers placed in explicit <code>.rtt_buff_data</code> section + <code>RTT_INIT_MODE_STRONG_CHECK=y</code> (preserves RTT from MCUboot&rarr;app transition). Better debug probe behavior.</div>
+</div>
+
+<div class="config-entry" data-risk="none" data-text="CONFIG_BUILD_OUTPUT_META build metadata">
+<span class="config-name">BUILD_OUTPUT_META</span> <span class="badge none">NONE</span> <span class="tag build">BUILD</span>
+<div class="config-values"><span class="val-old">y</span><span class="val-arrow">&rarr;</span><span class="val-new">n</span></div>
+<div class="config-desc">Build metadata file generation disabled. No runtime impact.</div>
+</div>
+
+<div class="config-entry" data-risk="none" data-text="CONFIG_KOBJECT removed userspace mcuboot irrelevant">
+<span class="config-name">KOBJECT_TEXT_AREA/DATA_AREA/RODATA_AREA (removed from config)</span> <span class="badge none">NONE</span> <span class="tag kernel">KERNEL</span>
+<div class="config-desc">Kconfig dependency changed from <code>ARCH_HAS_USERSPACE</code> to <code>USERSPACE</code>. MCUboot never enables USERSPACE. Configs were always irrelevant; now correctly hidden.</div>
+</div>
+
+<div class="config-entry" data-risk="none" data-text="CONFIG_WFA_QT wifi alliance irrelevant mcuboot">
+<span class="config-name">WFA_QT_* (interface, stack size)</span> <span class="badge none">NONE</span>
+<div class="config-desc">Wi-Fi Alliance test configs. Zero impact on MCUboot.</div>
+</div>
+
+</div></div>
+
+<!-- ==================== SECTION 5: REMOVED/NOISE ==================== -->
+<div class="section" id="sec-removed">
+<div class="section-header" onclick="toggleSection(this)">
+<span><span class="arrow">&#9660;</span> Section 5: Removed / Noise (~250 configs)</span>
+<span style="color:#8b949e">SUIT, nRF Cloud, PSA_WANT_*, module paths</span>
+</div>
+<div class="section-body">
+
+<div class="noise-summary">
+<div class="noise-cat">
+<span class="noise-count">~50</span> removed: <strong>nRF Cloud configs</strong><br>
+<span style="color:#8b949e">NRF_CLOUD_*, FOTA_*, DOWNLOAD_CLIENT &mdash; all were =n or default. nRF Cloud menu restructured; <code>CONFIG_NRF_CLOUD</code> is now a single "not set" entry. Irrelevant to MCUboot.</span>
+</div>
+<div class="noise-cat">
+<span class="noise-count">~18</span> removed: <strong>SUIT infrastructure</strong><br>
+<span style="color:#8b949e">MGMT_SUITFU_*, SUIT_*, ZEPHYR_SUIT_*_MODULE &mdash; SUIT was experimental in v2.7.0, removed in v3.2.2. Nordic committed to MCUmgr-based OTA.</span>
+</div>
+<div class="noise-cat">
+<span class="noise-count">~80</span> changed: <strong>PSA_WANT_* reorganization</strong><br>
+<span style="color:#8b949e">PSA algorithm menu restructured with Nordic-specific sections (Nordic added alg types, key types, ECC curves, RNG). All remain =n for MCUboot (no PSA crypto in CC310 BL path). New entries: ML_DSA, ML_KEM, XMSS (post-quantum), WPA3_SAE, AES_KW, XCHACHA20.</span>
+</div>
+<div class="noise-cat">
+<span class="noise-count">~40</span> changed: <strong>Module path version updates</strong><br>
+<span style="color:#8b949e">All <code>(/opt/nordic/ncs/v2.7.0/...)</code> comments changed to <code>(/opt/nordic/ncs/v3.2.2/...)</code>. No functional change.</span>
+</div>
+<div class="noise-cat">
+<span class="noise-count">~30</span> changed: <strong>POSIX API modularization</strong><br>
+<span style="color:#8b949e">POSIX_CLOCK/SIGNAL/MQUEUE/etc. restructured into POSIX_BARRIERS, POSIX_TIMERS, POSIX_SEMAPHORES, etc. All =n for MCUboot.</span>
+</div>
+<div class="noise-cat">
+<span class="noise-count">~15</span> changed: <strong>NRFX peripheral driver naming</strong><br>
+<span style="color:#8b949e">Instance-specific configs (NRFX_PWM0/1/2/3, NRFX_TIMER0/1/2/3/4, NRFX_SPIM0/1/2/3, NRFX_UARTE0/1) consolidated to generic names (NRFX_PWM, NRFX_TIMER, NRFX_SPIM, NRFX_UARTE). All =n for MCUboot.</span>
+</div>
+<div class="noise-cat">
+<span class="noise-count">~10</span> added: <strong>New module registrations</strong><br>
+<span style="color:#8b949e">ZEPHYR_CMSIS_6_MODULE, ZEPHYR_HOSTAP_MODULE, ZEPHYR_NRF_WIFI_MODULE, ZEPHYR_PERCEPIO_MODULE, ZEPHYR_HAL_TDK_MODULE. Module registration only, inactive.</span>
+</div>
+<div class="noise-cat">
+<span class="noise-count">~5</span> removed: <strong>Misc deprecated</strong><br>
+<span style="color:#8b949e">CPLUSPLUS/LIB_CPLUSPLUS (deprecated), DEBUG_INFO (removed), COVERAGE_GCOV_HEAP_SIZE (test only), LOG_USE_TAGGED_ARGUMENTS, GETOPT. None relevant to MCUboot.</span>
+</div>
+</div>
+
+</div></div>
+
+<!-- ==================== SECTION 6: CRYPTO PATH VERIFICATION ==================== -->
+<div class="section" id="sec-crypto-path">
+<div class="section-header" onclick="toggleSection(this)">
+<span><span class="arrow">&#9660;</span> Section 6: CC310 BL Crypto Path Verification</span>
+<span style="color:#3fb950">UNCHANGED &mdash; same code path in both versions</span>
+</div>
+<div class="section-body">
+
+<div style="padding:14px;">
+<p style="margin-bottom:12px;"><strong>MCUboot crypto for ECDSA-P256 on nRF52840 uses the CC310 BL precompiled library in both versions.</strong></p>
+
+<table style="width:100%;border-collapse:collapse;margin-top:12px;">
+<tr style="border-bottom:1px solid #30363d;"><th style="text-align:left;padding:8px;color:#58a6ff;">Config</th><th style="text-align:left;padding:8px;color:#58a6ff;">v2.7.0</th><th style="text-align:left;padding:8px;color:#58a6ff;">v3.2.2</th><th style="text-align:left;padding:8px;color:#58a6ff;">Changed?</th></tr>
+<tr style="border-bottom:1px solid #21262d;"><td style="padding:8px;">BOOT_SIGNATURE_TYPE_ECDSA_P256</td><td style="padding:8px;color:#3fb950;">y</td><td style="padding:8px;color:#3fb950;">y</td><td style="padding:8px;color:#3fb950;">No</td></tr>
+<tr style="border-bottom:1px solid #21262d;"><td style="padding:8px;">BOOT_ECDSA_CC310</td><td style="padding:8px;color:#3fb950;">y</td><td style="padding:8px;color:#3fb950;">y</td><td style="padding:8px;color:#3fb950;">No &mdash; identical selects</td></tr>
+<tr style="border-bottom:1px solid #21262d;"><td style="padding:8px;">BOOT_USE_NRF_CC310_BL</td><td style="padding:8px;color:#3fb950;">y (selected)</td><td style="padding:8px;color:#3fb950;">y (selected)</td><td style="padding:8px;color:#3fb950;">No</td></tr>
+<tr style="border-bottom:1px solid #21262d;"><td style="padding:8px;">NRF_CC310_BL</td><td style="padding:8px;color:#3fb950;">y (selected)</td><td style="padding:8px;color:#3fb950;">y (selected)</td><td style="padding:8px;color:#3fb950;">No</td></tr>
+<tr style="border-bottom:1px solid #21262d;"><td style="padding:8px;">NRFXLIB_CRYPTO</td><td style="padding:8px;color:#3fb950;">y (selected)</td><td style="padding:8px;color:#3fb950;">y (selected)</td><td style="padding:8px;color:#3fb950;">No</td></tr>
+<tr style="border-bottom:1px solid #21262d;"><td style="padding:8px;">BOOT_USE_CC310</td><td style="padding:8px;color:#3fb950;">y (selected)</td><td style="padding:8px;color:#3fb950;">y (selected)</td><td style="padding:8px;color:#3fb950;">No</td></tr>
+<tr style="border-bottom:1px solid #21262d;"><td style="padding:8px;">MBEDTLS_CFG_FILE</td><td style="padding:8px;color:#d29922;">"mcuboot-mbedtls-cfg.h"</td><td style="padding:8px;color:#d29922;">not set (CC310 doesn't use it)</td><td style="padding:8px;color:#d29922;">Conditional &mdash; no impact on CC310</td></tr>
+<tr style="border-bottom:1px solid #21262d;"><td style="padding:8px;">NRF_SECURITY</td><td style="padding:8px;color:#8b949e;">n</td><td style="padding:8px;color:#8b949e;">n</td><td style="padding:8px;color:#3fb950;">No</td></tr>
+<tr style="border-bottom:1px solid #21262d;"><td style="padding:8px;">PSA_CRYPTO</td><td style="padding:8px;color:#8b949e;">n/a</td><td style="padding:8px;color:#8b949e;">n</td><td style="padding:8px;color:#3fb950;">N/A &mdash; PSA is alternative path</td></tr>
+</table>
+
+<p style="margin-top:12px;color:#8b949e;">v3.2.2 adds <code>BOOT_ECDSA_PSA</code> as an alternative ECDSA implementation (requires <code>NRF_SECURITY=y</code>). The ECDSA choice default adds <code>default BOOT_ECDSA_PSA if NRF_SECURITY</code>, but the NCS overlay (<code>nrf/modules/mcuboot/boot/zephyr/Kconfig</code>) forces <code>default BOOT_ECDSA_CC310 if HAS_HW_NRF_CC310</code>, which takes precedence for nRF52840.</p>
+</div>
+
+</div></div>
+
+<script>
+function toggleSection(header) {
+    header.classList.toggle('collapsed');
+    header.nextElementSibling.classList.toggle('hidden');
+}
+
+let currentRiskFilter = 'all';
+
+function filterConfigs() {
+    const query = document.getElementById('searchBox').value.toLowerCase();
+    document.querySelectorAll('.config-entry').forEach(entry => {
+        const text = (entry.getAttribute('data-text') || '').toLowerCase() + ' ' + entry.textContent.toLowerCase();
+        const risk = entry.getAttribute('data-risk') || '';
+        const matchesSearch = !query || text.includes(query);
+        const matchesRisk = currentRiskFilter === 'all' || risk === currentRiskFilter;
+        entry.style.display = (matchesSearch && matchesRisk) ? '' : 'none';
+    });
+}
+
+function filterByRisk(risk, btn) {
+    currentRiskFilter = risk;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    filterConfigs();
+}
+</script>
+
+</body>
+</html>
